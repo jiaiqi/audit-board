@@ -5,6 +5,7 @@ trustPolicy: no-downgrade
 packages: []
 catalogs:
   build:
+    '@iconify-json/ri': ^1.2.10
     '@nuxt/devtools': ^3.1.1
     '@nuxt/eslint': ^1.14.0
     '@nuxt/kit': ^4.3.1
@@ -12,6 +13,7 @@ catalogs:
     '@pinia/nuxt': ^0.11.3
     '@unocss/eslint-config': ^66.6.0
     '@unocss/nuxt': ^66.6.0
+    '@unocss/preset-icons': ^66.6.0
     '@vite-pwa/nuxt': ^1.1.1
     '@vueuse/nuxt': ^14.2.0
     nuxt: ^4.3.1
@@ -27,6 +29,7 @@ catalogs:
     vue-tsc: ^3.2.4
   frontend:
     '@vueuse/core': ^14.2.0
+    echarts: ^5.4.3
     pinia: ^3.0.4
     vue: ^3.5.27
   icons:
