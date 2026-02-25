@@ -1,4 +1,7 @@
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+>
 import type { EChartsOption } from 'echarts'
 import * as echarts from 'echarts'
 
@@ -122,7 +125,7 @@ const lineOption: EChartsOption = {
     data: ['追缴金额'],
     textStyle: { color: '#a6b9c8' },
     top: 5,
-    right: 20,
+    right: 'center',
     icon: 'circle',
     itemWidth: 8,
     itemHeight: 8,
@@ -137,7 +140,7 @@ const lineOption: EChartsOption = {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    top: '10%',
+    top: '15%',
     containLabel: true,
   },
   xAxis: {
@@ -198,13 +201,13 @@ const pieOption: EChartsOption = {
   series: [
     {
       name: '特殊车型',
+      roseType: 'area',
       type: 'pie',
-      radius: ['40%', '70%'],
-      center: ['35%', '50%'],
+      radius: ['20%', '70%'],
+      center: ['50%', '50%'],
       avoidLabelOverlap: true,
       itemStyle: {
-        borderRadius: 6,
-        borderColor: '#0b111a',
+        borderRadius: 2,
         borderWidth: 2,
       },
       label: {
@@ -223,7 +226,7 @@ const pieOption: EChartsOption = {
         },
       },
       data: [
-        { value: 23, name: '类型一', itemStyle: { color: '#ff9f00' } },
+        { value: 40, name: '类型一', itemStyle: { color: '#ff9f00' } },
         { value: 32, name: '类型二', itemStyle: { color: '#00e676' } },
         { value: 18, name: '类型三', itemStyle: { color: '#2979ff' } },
         { value: 23, name: '类型四', itemStyle: { color: '#00f0ff' } },
@@ -249,7 +252,7 @@ const ringOption: EChartsOption = {
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
               { offset: 0, color: '#00f0ff' },
-              { offset: 1, color: '#00e676' },
+              { offset: 1, color: '#48F7F7' },
             ]),
           },
         },
@@ -334,7 +337,7 @@ const groupBarOption: EChartsOption = {
     data: ['发起工单', '处理工单', '追缴工单'],
     textStyle: { color: '#a6b9c8' },
     top: 0,
-    right: 10,
+    right: 'center',
     itemWidth: 12,
     itemHeight: 12,
   },
@@ -342,7 +345,7 @@ const groupBarOption: EChartsOption = {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    top: '20%',
+    top: '15%',
     containLabel: true,
   },
   xAxis: {
@@ -444,32 +447,23 @@ useHead({
     class="bg-[#0b111a] bg-[url('/assets/images/bg01.jpg')] h-screen w-screen overflow-hidden bg-size-[100%_100%] bg-center"
   >
     <div
-      ref="screenRef" class="text-white px-5 py-1 flex flex-col relative overflow-hidden"
+      ref="screenRef"
+      class="text-white px-5 flex flex-col h-full w-full relative overflow-hidden"
       style="transform-origin: left top;"
     >
       <header class="mb-5 px-8 py-3 flex items-center justify-between relative">
         <!-- 左侧时间 -->
-        <div class="text-sm text-[#a6b9c8] font-mono min-w-[180px]">
+        <div class="text-lg font-mono min-w-[180px]">
           {{ currentTime }}
         </div>
         <!-- 中间标题 -->
         <div class="text-center flex-1 relative">
-          <!-- 左装饰线 -->
-          <!-- <div
-            class="h-[1px] left-0 right-[calc(50%+160px)] top-1/2 absolute"
-            style="background: linear-gradient(90deg, transparent, #00f0ff);"
-          /> -->
           <h1
             class="text-2xl text-[#EBF9FF] tracking-[8px] font-bold inline-block relative"
             style="text-shadow:0px 2px 6px rgba(0,190,231,1);"
           >
             交控稽核大数据分析看板
           </h1>
-          <!-- 右装饰线 -->
-          <!-- <div
-            class="h-[1px] left-[calc(50%+160px)] right-0 top-1/2 absolute"
-            style="background: linear-gradient(90deg, #00f0ff, transparent);"
-          /> -->
         </div>
         <!-- 右侧按钮 -->
         <div class="flex gap-4 min-w-[180px] items-center justify-end">
@@ -479,13 +473,24 @@ useHead({
           >
             <!-- 进入全屏图标 -->
             <svg
-              v-if="!isFullscreen" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor"
+              v-if="!isFullscreen"
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
               stroke-width="2"
             >
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
             </svg>
             <!-- 退出全屏图标 -->
-            <svg v-else viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              v-else
+              viewBox="0 0 24 24"
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
             </svg>
           </button>
@@ -497,197 +502,205 @@ useHead({
         />
       </header>
 
-      <div class="mb-4 gap-5 grid grid-cols-4">
-        <div
-          class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
-        >
-          <div class="p-5 flex h-full items-center justify-between">
-            <div class="flex flex-col">
-              <div class="top-block-title text-sm mb-17px flex gap-2 items-center">
-                本月发起工单
+      <div class="pb-30px pt-10px flex flex-1 flex-col">
+        <div class="mb-4 gap-5 grid grid-cols-4">
+          <div
+            class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
+          >
+            <div class="px-10 py-5 flex h-full items-center justify-between">
+              <div class="flex flex-col">
+                <div class="top-block-title text-sm flex gap-2 items-center">
+                  本月发起工单
+                </div>
+                <div class="text-[48px] text-#FFCD84 font-bold">
+                  124
+                </div>
               </div>
-              <div
-                class="text-[36px] text-#FFCD84 font-bold"
+              <img
+                src="/assets/icons/01.png"
+                alt=""
+                class="top-block-icon"
               >
-                124
-              </div>
             </div>
-            <img src="/assets/icons/01.png" alt="" class="top-block-icon">
           </div>
-        </div>
 
-        <div
-          class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
-        >
-          <div class="p-5 flex h-full items-center justify-between">
-            <div class="flex flex-col">
-              <div class="top-block-title text-sm mb-17px flex gap-2 items-center">
-                本月追缴工单
+          <div
+            class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
+          >
+            <div class="px-10 py-5 flex h-full items-center justify-between">
+              <div class="flex flex-col">
+                <div class="top-block-title text-sm flex gap-2 items-center">
+                  本月追缴工单
+                </div>
+                <div class="text-[48px] text-#FFCD84 font-bold">
+                  623
+                </div>
               </div>
-              <div class="text-[36px] text-#FFCD84 font-bold">
-                623
-              </div>
-            </div>
-            <img src="/assets/icons/02.png" alt="" class="top-block-icon">
-          </div>
-        </div>
-
-        <div
-          class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
-        >
-          <div class="p-5 flex h-full items-center justify-between">
-            <div class="flex flex-col">
-              <div class="top-block-title text-sm mb-17px flex gap-2 items-center">
-                本月追缴金额
-              </div>
-              <div class="text-[36px] text-#FFCD84 font-bold">
-                40.17
-                <span class="text-base text-[#a6b9c8] ml-1">万</span>
-              </div>
-            </div>
-            <img src="/assets/icons/03.png" alt="" class="top-block-icon">
-          </div>
-        </div>
-
-        <div
-          class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
-        >
-          <div class="p-5 flex h-full items-center justify-between">
-            <div class="flex flex-col">
-              <div class="top-block-title text-sm mb-17px flex gap-2 items-center">
-                上月追缴金额
-              </div>
-              <div class="text-[36px] text-#FFCD84 font-bold">
-                62.23
-                <span class="text-base text-[#a6b9c8] ml-1">万</span>
-              </div>
-            </div>
-            <img src="/assets/icons/04.png" alt="" class="top-block-icon">
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-4 flex-1 gap-5 grid grid-cols-2 min-h-318px">
-        <div
-          class="border border-[rgba(0,240,255,0.3)] flex flex-col h-full relative"
-          style="background: linear-gradient(135deg, rgba(15, 42, 53, 0.8), rgba(11, 17, 26, 0.8));"
-        >
-          <div class="mb-4 pb-2.5 border-b border-[rgba(0,240,255,0.2)] flex gap-2.5 items-center">
-            <div
-              class="h-5 w-5" style="
-                background: linear-gradient(135deg, #00f0ff, #00e676);
-                clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-              "
-            />
-            <div class="text-base text-white font-bold">
-              分公司追缴金额(近30日TOP10)
-            </div>
-          </div>
-          <div ref="barChartRef" class="flex-1 min-h-0 w-full" />
-        </div>
-
-        <div
-          class="border border-[rgba(0,240,255,0.3)] flex flex-col relative"
-          style="background: linear-gradient(135deg, rgba(15, 42, 53, 0.8), rgba(11, 17, 26, 0.8));"
-        >
-          <div class="mb-4 pb-2.5 border-b border-[rgba(0,240,255,0.2)] flex gap-2.5 items-center">
-            <div
-              class="h-5 w-5" style="
-                background: linear-gradient(135deg, #00f0ff, #00e676);
-                clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-              "
-            />
-            <div class="text-base text-white font-bold">
-              追缴金额历史趋势
-            </div>
-          </div>
-          <div ref="lineChartRef" class="flex-1 min-h-0 w-full" />
-        </div>
-      </div>
-
-      <div class="flex-1 gap-5 grid grid-cols-[1fr_1fr_1.2fr] min-h-0">
-        <div
-          class="border border-[rgba(0,240,255,0.3)] flex flex-col h-438px relative"
-          style="background: linear-gradient(135deg, rgba(15, 42, 53, 0.8), rgba(11, 17, 26, 0.8));"
-        >
-          <div class="mb-4 pb-2.5 border-b border-[rgba(0,240,255,0.2)] flex gap-2.5 items-center">
-            <div
-              class="h-5 w-5" style="
-                background: linear-gradient(135deg, #00f0ff, #00e676);
-                clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-              "
-            />
-            <div class="text-base text-white font-bold">
-              特情车辆类型数量(近30日)
-            </div>
-          </div>
-          <div ref="pieChartRef" class="flex-1 min-h-0 w-full" />
-        </div>
-
-        <div
-          class="border border-[rgba(0,240,255,0.3)] flex flex-col relative"
-          style="background: linear-gradient(135deg, rgba(15, 42, 53, 0.8), rgba(11, 17, 26, 0.8));"
-        >
-          <div class="mb-4 pb-2.5 border-b border-[rgba(0,240,255,0.2)] flex gap-2.5 items-center">
-            <div
-              class="h-5 w-5" style="
-                background: linear-gradient(135deg, #00f0ff, #00e676);
-                clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-              "
-            />
-            <div class="text-base text-white font-bold">
-              指标
-            </div>
-          </div>
-          <!-- 上半部分：大数字 + 环形进度条 -->
-          <div class="px-4 py-2 flex items-center justify-between">
-            <div>
-              <div class="text-xs text-[#a6b9c8] mb-1">
-                本月处理工单
-              </div>
-              <div
-                class="text-[48px] text-[#00f0ff] leading-none font-bold" style="
-                  font-family: 'Oswald', 'Roboto Condensed', sans-serif;
-                  text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
-                "
+              <img
+                src="/assets/icons/02.png"
+                alt=""
+                class="top-block-icon"
               >
-                6236
-              </div>
-            </div>
-            <div class="h-[100px] w-[100px] relative">
-              <div ref="ringChartRef" class="h-full w-full" />
-              <div class="flex flex-col items-center inset-0 justify-center absolute">
-                <span class="text-xl text-[#00f0ff] font-bold" style="font-family: 'Oswald', sans-serif;">20%</span>
-                <span class="text-[10px] text-[#a6b9c8]">处理率</span>
-              </div>
             </div>
           </div>
-          <!-- 下半部分：趋势折线图 -->
-          <div class="px-4 pb-2">
-            <div class="text-xs text-[#a6b9c8] mb-1 flex gap-1 items-center">
-              <span class="rounded-full bg-[#a6b9c8] h-1.5 w-1.5 inline-block" />
-              上月追缴金额日变化趋势图
+
+          <div
+            class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
+          >
+            <div class="px-10 py-5 flex h-full items-center justify-between">
+              <div class="flex flex-col">
+                <div class="top-block-title text-sm flex gap-2 items-center">
+                  本月追缴金额
+                </div>
+                <div class="text-[48px] text-#FFCD84 font-bold">
+                  40.17
+                  <span class="text-base ml-1">万</span>
+                </div>
+              </div>
+              <img
+                src="/assets/icons/03.png"
+                alt=""
+                class="top-block-icon"
+              >
             </div>
-            <div ref="trendLineChartRef" class="h-[150px] w-full" />
+          </div>
+
+          <div
+            class="top-block h-180px transition-all duration-300 relative overflow-hidden hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:translate-y-[-2px]"
+          >
+            <div class="px-10 py-5 flex h-full items-center justify-between">
+              <div class="flex flex-col">
+                <div class="top-block-title text-sm flex gap-2 items-center">
+                  上月追缴金额
+                </div>
+                <div class="text-[48px] text-#FFCD84 font-bold">
+                  62.23
+                  <span class="text-base text-[#a6b9c8] ml-1">万</span>
+                </div>
+              </div>
+              <img
+                src="/assets/icons/04.png"
+                alt=""
+                class="top-block-icon"
+              >
+            </div>
           </div>
         </div>
 
-        <div
-          class="border border-[rgba(0,240,255,0.3)] flex flex-col relative"
-          style="background: linear-gradient(135deg, rgba(15, 42, 53, 0.8), rgba(11, 17, 26, 0.8));"
-        >
-          <div class="mb-4 pb-2.5 border-b border-[rgba(0,240,255,0.2)] flex gap-2.5 items-center">
+        <div class="mb-4 flex-1 gap-5 grid grid-cols-2 min-h-318px">
+          <div
+            class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col h-full relative"
+          >
+            <div class="center-block-title bg1">
+              <div class="text-base text-white font-bold mt--28px">
+                分公司追缴金额(近30日TOP10)
+              </div>
+            </div>
             <div
-              class="h-5 w-5" style="
-                background: linear-gradient(135deg, #00f0ff, #00e676);
-                clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-              "
+              ref="barChartRef"
+              class="flex-1 h-full w-full"
             />
-            <div class="text-base text-white font-bold">
-              工单量按月统计
+          </div>
+
+          <div
+            class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col relative"
+          >
+            <div class="center-block-title bg1">
+              <div class="text-base text-white font-bold mt--28px">
+                追缴金额历史趋势
+              </div>
+            </div>
+            <div
+              ref="lineChartRef"
+              class="flex-1 h-full w-full"
+            />
+          </div>
+        </div>
+
+        <div class="flex-1 gap-5 grid grid-cols-[1fr_1fr_1.2fr]">
+          <div
+            class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col h-438px relative"
+          >
+            <div class="center-block-title bg2">
+              <div class="text-base text-white font-bold mt--28px">
+                特情车辆类型数量(近30日)
+              </div>
+            </div>
+            <div
+              ref="pieChartRef"
+              class="flex-1 h-full w-full"
+            />
+          </div>
+
+          <div class="flex flex-col gap-16px">
+            <div
+              class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col relative"
+            >
+              <div class="center-block-title bg3">
+                <div class="text-base text-white font-bold mt--28px">
+                  指标
+                </div>
+              </div>
+              <!-- 上半部分：大数字 + 环形进度条 -->
+              <div class="flex flex-1 items-center justify-between">
+                <div class="pt-18px flex gap-30px">
+                  <img src="/assets/icons/05.png" alt="">
+                  <div>
+                    <div class="text-lg text-white font-bold mb-20px">
+                      本月处理工单
+                    </div>
+                    <div
+                      class="text-[48px] text-[#FFCD84] leading-none font-bold"
+                    >
+                      6236
+                    </div>
+                  </div>
+                </div>
+                <div class="h-[130px] w-[130px] relative">
+                  <div
+                    ref="ringChartRef"
+                    class="h-full w-full"
+                  />
+                  <div class="flex flex-col items-center inset-0 justify-center absolute">
+                    <span
+                      class="text-xl text-white font-bold"
+                    >20%</span>
+                    <span class="text-[10px]">处理率</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="center-block border border-[rgba(0,240,255,0.3)] flex flex-1 flex-col relative"
+            >
+              <div class="center-block-title">
+                <span class="i-ri:radio-button-line text-#6ADEFE ml--20px mr-14px inline-block" />
+                <div class="text-base text-white font-bold">
+                  上月追缴金额日变化趋势图
+                </div>
+              </div>
+              <!-- 下半部分：趋势折线图 -->
+              <div
+                ref="trendLineChartRef"
+                class="flex-1 w-full"
+              />
             </div>
           </div>
-          <div ref="groupBarChartRef" class="flex-1 min-h-0 w-full" />
+
+          <div
+            class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col relative"
+          >
+            <div class="center-block-title bg4">
+              <div class="text-base text-white font-bold mt--28px">
+                工单量按月统计
+              </div>
+            </div>
+            <div
+              ref="groupBarChartRef"
+              class="flex-1 w-full"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -701,33 +714,69 @@ useHead({
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 240, 255, 0.1);
+  background: rgba(1, 31, 31, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.3);
+  background: rgba(1, 31, 31, 0.5);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.5);
+  background: rgba(1, 31, 31, 0.5);
 }
+
 .top-block {
   width: 450px;
   height: 181px;
-  line-height: 21px;
   background-image: url('/assets/images/top-block-bg.png');
   background-size: 100% 100%;
+  font-family: initial;
 }
+
 .top-block-title {
   line-height: 39px;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
   display: inline-block;
-  transform: skew(-10deg);
+  transform: skew(-5deg);
+  margin-bottom: 10px;
 }
+
 .top-block-icon {
   width: 136px;
   height: 127px;
+}
+
+.center-block {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 178, 255, 0.15);
+}
+
+.center-block-title {
+  background-size: 100% 100%;
+  height: 39px;
+  display: flex;
+  align-items: center;
+  padding-left: 34px;
+}
+
+.center-block-title.bg1 {
+  padding-left: 40px;
+  background-image: url('/assets/images/title_bg_1.png');
+}
+
+.center-block-title.bg2 {
+  background-image: url('/assets/images/title_bg_2.png');
+}
+
+.center-block-title.bg3 {
+  background-image: url('/assets/images/title_bg_3.png');
+}
+
+.center-block-title.bg4 {
+  background-image: url('/assets/images/title_bg_4.png');
 }
 </style>

@@ -1,3 +1,4 @@
+import { nextTick, onMounted, ref } from 'vue'
 /**
  * 大屏看板缩放自适应
  * 基于设计稿尺寸（默认 1920×1080），根据当前视口自动缩放内容
