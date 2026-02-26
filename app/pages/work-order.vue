@@ -288,7 +288,7 @@ onBeforeUnmount(() => {
   groupBarChart_inst?.dispose()
 })
 
-const title = ref('交控稽核工单看板')
+const title = ref('交控稽核工单大数据看板')
 useHead({ title: title.value })
 </script>
 

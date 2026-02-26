@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
   vehiclePieChart_inst?.dispose(); trendLineChart_inst?.dispose(); amountBarChart_inst?.dispose()
 })
 
-useHead({ title: '交控稽核大数据分析看板' })
+useHead({ title: '交控在途稽核大数据分析看板' })
 </script>
 
 <template>
@@ -259,7 +259,7 @@ useHead({ title: '交控稽核大数据分析看板' })
         <div class="header-title">
           <!-- <div class="title-line-l" /> -->
           <h1 class="title-text">
-            交控稽核大数据分析看板
+            交控在途稽核大数据分析看板
           </h1>
           <!-- <div class="title-line-r" /> -->
         </div>
