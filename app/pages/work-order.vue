@@ -1,62 +1,71 @@
 <script setup lang="ts">
+/**
+ * work-order.vue — 交控稽核工单大数据看板
+ *
+ * 页面展示内容：
+ *   - 顶部：实时时钟 + 看板标题 + 全屏切换
+ *   - 统计卡片（4张）：从接口动态渲染，数字随接口数据变化
+ *   - 图表区（6个 ECharts 图表）：
+ *       barChart       分公司追缴金额排名 TOP10（柱状图）
+ *       lineChart      追缴金额历史趋势（折线图）
+ *       pieChart       特情车辆类型数量（玫瑰饼图）
+ *       ringChart      指标环形进度（饼图模拟）
+ *       trendLineChart 上月追缴金额日变化趋势（多系列折线图）
+ *       groupBarChart  工单量按月统计（分组柱状图）
+ */
 import type { EChartsOption } from 'echarts'
+// 从 useAuditBoardData composable 导入各图表专用数据类型，确保 TS 类型安全
 import type { BarChartData, GroupBarChartData, LineChartData, PieChartData, RingChartData, TrendLineChartData } from '~/composables/useAuditBoardData'
 
 import * as echarts from 'echarts'
 
+// 指定此页面使用 audit 布局（全屏深色背景）
 definePageMeta({
   layout: 'audit',
 })
 
-const currentTime = ref('')
+// ── 实时时钟 ──────────────────────────────────────
+// 无日期/星期需求，传入 showDate: false
+const { currentTime, currentDate } = useBoardClock({ showDate: true, showWeek: false })
 
-function updateTime() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const hours = String(now.getHours()).padStart(2, '0')
-  const minutes = String(now.getMinutes()).padStart(2, '0')
-  const seconds = String(now.getSeconds()).padStart(2, '0')
-  currentTime.value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
-}
-
-useIntervalFn(updateTime, 1000)
-onMounted(updateTime)
-
-// 全屏功能
+// ── 全屏切换 ──────────────────────────────────────
+// isFullscreen: 当前是否全屏，toggleFullscreen: 切换函数
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
-// 屏幕自适应缩放
+// ── 屏幕自适应缩放 ────────────────────────────────
+// 以 1920×1080 为基准分辨率进行等比缩放
 const { screenRef } = useScreenScale({ width: 1920, height: 1080 })
 
-// ── 接口数据 ──────────────────────────────────
+// ── 接口数据（每个图表独立接口）─────────────────────
+// useAuditBoardData 封装了所有图表的 useFetch 请求，
+// 各字段均为 ComputedRef，数据就绪后自动驱动对应 watch 更新图表
 const { stats, barChart, lineChart, pieChart, ringChart, trendLineChart, groupBarChart } = useAuditBoardData()
 
-// ── 图表配置（仅定义样式，数据由 watch 动态注入）──────
+// ── ECharts 公共配置 ──────────────────────────────
+// 所有图表共享：透明背景 + 微软雅黑字体，通过展开运算符合并到各图表 option
 const commonOption: EChartsOption = {
   backgroundColor: 'transparent',
   textStyle: { fontFamily: 'Microsoft YaHei, sans-serif' },
 }
 
-// ── ECharts 实例（加 _inst 后缀，避免与接口数据同名冲突）──
+// ── ECharts 实例声明 ──────────────────────────────
+// ── ECharts 容器 DOM 引用 ─────────────────────────
 const barChartRef = ref<HTMLElement>()
-let barChart_inst: echarts.ECharts | null = null
-
 const lineChartRef = ref<HTMLElement>()
-let lineChart_inst: echarts.ECharts | null = null
-
 const pieChartRef = ref<HTMLElement>()
-let pieChart_inst: echarts.ECharts | null = null
-
 const ringChartRef = ref<HTMLElement>()
-let ringChart_inst: echarts.ECharts | null = null
-
 const trendLineChartRef = ref<HTMLElement>()
-let trendLineChart_inst: echarts.ECharts | null = null
-
 const groupBarChartRef = ref<HTMLElement>()
-let groupBarChart_inst: echarts.ECharts | null = null
+
+// ── 图表 Option 构建函数 ───────────────────────────
+// 每个 build 函数只负责「样式 + 结构」，数据通过参数 c 传入，
+// 参数为 null 时用空数组/0 兜底，避免图表初始化阶段报错。
+
+/**
+ * 构建分公司追缴金额排名柱状图 option
+ * @param c 接口数据（categories: 公司名列表，series[0].data: 金额列表）
+ * 颜色策略：蓝色/橙色渐变交替，增加视觉区分度
+ */
 function buildBarOption(c: BarChartData | null): EChartsOption {
   return {
     ...commonOption,
@@ -66,13 +75,13 @@ function buildBarOption(c: BarChartData | null): EChartsOption {
       type: 'category',
       data: c?.categories ?? [],
       axisLine: { lineStyle: { color: 'rgba(0,240,255,0.3)' } },
-      axisLabel: { color: '#fff', fontSize: 10, interval: 0, rotate: 30 },
+      axisLabel: { color: '#fff', fontSize: 10, interval: 0, rotate: 30 }, // 旋转 30° 防止标签重叠
       axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: '#fff', formatter: (v: number) => `${v}万元` },
+      axisLabel: { color: '#fff', formatter: (v: number) => `${v}万元` }, // 数值带单位
       splitLine: { lineStyle: { color: 'rgba(0,240,255,0.1)' } },
     },
     series: [{
@@ -81,9 +90,9 @@ function buildBarOption(c: BarChartData | null): EChartsOption {
       data: c?.series[0]?.data ?? [],
       barWidth: '50%',
       itemStyle: {
-        borderRadius: [4, 4, 0, 0],
+        borderRadius: [4, 4, 0, 0], // 顶部圆角
         color: (params: { dataIndex: number }) => {
-          // 蓝/橙交替颜色
+          // 蓝/橙交替线性渐变，使相邻柱子更易区分
           const colors = [
             new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#00f0ff' }, { offset: 1, color: 'rgba(0,240,255,0.3)' }]),
             new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff9f00' }, { offset: 1, color: 'rgba(255,159,0,0.3)' }]),
@@ -91,10 +100,15 @@ function buildBarOption(c: BarChartData | null): EChartsOption {
           return colors[params.dataIndex % 2] as echarts.graphic.LinearGradient
         },
       },
-      emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,240,255,0.5)' } },
+      emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,240,255,0.5)' } }, // hover 时发光效果
     }],
   }
 }
+/**
+ * 构建追缴金额历史趋势折线图 option
+ * @param c 接口数据（categories: 月份列表，series[0].data: 金额列表）
+ * 使用渐变面积填充增强趋势感
+ */
 function buildLineOption(c: LineChartData | null): EChartsOption {
   return {
     ...commonOption,
@@ -103,7 +117,7 @@ function buildLineOption(c: LineChartData | null): EChartsOption {
     grid: { left: '3%', right: '4%', bottom: '3%', top: '20%', containLabel: true },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
+      boundaryGap: false, // 折线从坐标轴起点开始，不留空白
       data: c?.categories ?? [],
       axisLine: { lineStyle: { color: 'rgba(255,159,0,0.3)' } },
       axisLabel: { color: '#fff' },
@@ -120,9 +134,10 @@ function buildLineOption(c: LineChartData | null): EChartsOption {
     series: [{
       name: '追缴金额',
       type: 'line',
-      smooth: true,
+      smooth: true, // 平滑曲线，视觉更柔和
       data: c?.series[0]?.data ?? [],
       lineStyle: { color: '#ff9f00', width: 3 },
+      // 从线条颜色向透明的垂直渐变面积填充
       areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(255,159,0,0.5)' }, { offset: 1, color: 'rgba(255,159,0,0.05)' }]) },
       itemStyle: { color: '#ff9f00' },
       symbol: 'circle',
@@ -130,46 +145,64 @@ function buildLineOption(c: LineChartData | null): EChartsOption {
     }],
   }
 }
+/**
+ * 构建特情车辆类型数量玫瑰饼图 option
+ * @param c 接口数据（data: [{value, name}] 格式的数组）
+ * roseType:'area' 使面积而非半径代表大小，视觉更均衡
+ */
 function buildPieOption(c: PieChartData | null): EChartsOption {
-  const pieColors = ['#ff9f00', '#00e676', '#2979ff', '#00f0ff']
+  const pieColors = ['#ff9f00', '#00e676', '#2979ff', '#00f0ff'] // 预设调色盘，循环取用
   return {
     ...commonOption,
     tooltip: { trigger: 'item', backgroundColor: 'rgba(11,17,26,0.9)', borderColor: '#00f0ff', textStyle: { color: '#fff' }, formatter: '{b}: {c} ({d}%)' },
-    legend: { show: false },
+    legend: { show: false }, // 依靠外部标签显示名称，图例隐藏节省空间
     series: [{
       name: '特殊车型',
-      roseType: 'area',
+      roseType: 'area', // 南丁格尔玫瑰图，面积正比于数值
       type: 'pie',
-      radius: ['20%', '70%'],
+      radius: ['20%', '70%'], // 内半径留空形成空心效果
       center: ['50%', '50%'],
-      avoidLabelOverlap: true,
+      avoidLabelOverlap: true, // 自动规避标签重叠
       itemStyle: { borderRadius: 2, borderWidth: 2 },
       label: { show: true, position: 'outside', color: '#fff', formatter: '{b}: {c}' },
       labelLine: { lineStyle: { color: 'rgba(0,240,255,0.3)' } },
       emphasis: { label: { fontSize: 14, fontWeight: 'bold' } },
+      // map 为每个数据项动态分配调色盘颜色
       data: (c?.data ?? []).map((d, i) => ({ ...d, itemStyle: { color: pieColors[i % pieColors.length] } })),
     }],
   }
 }
+/**
+ * 构建工单处理指标环形进度图 option
+ * @param c 接口数据（value: 已处理数，total: 总数）
+ * 使用双扇形 pie 模拟环形进度：已处理（青色渐变）+ 未处理（低透明度填充）
+ */
 function buildRingOption(c: RingChartData | null): EChartsOption {
-  const val = c?.value ?? 0
-  const total = c?.total ?? 100
+  const val = c?.value ?? 0 // 已处理工单数（进度值）
+  const total = c?.total ?? 100 // 工单总数（兜底 100，避免除零）
   return {
     series: [{
       type: 'pie',
-      radius: ['70%', '85%'],
+      radius: ['70%', '85%'], // 较小内外半径差形成细环效果
       center: ['50%', '50%'],
-      silent: true,
-      label: { show: false },
+      silent: true, // 禁用交互，纯展示用途
+      label: { show: false }, // 标签由外层 DOM 覆盖显示，此处隐藏
       data: [
+        // 已完成部分：青色水平渐变
         { value: val, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#00f0ff' }, { offset: 1, color: '#48F7F7' }]) } },
+        // 未完成部分：低透明度填充
         { value: total - val, itemStyle: { color: 'rgba(0,240,255,0.1)' } },
       ],
     }],
   }
 }
+/**
+ * 构建上月追缴金额日变化趋势多系列折线图 option
+ * @param c 接口数据（categories: 日期列表，series: 多条折线）
+ * 支持多系列，颜色从预设数组循环取用
+ */
 function buildTrendLineOption(c: TrendLineChartData | null): EChartsOption {
-  const colors = ['#00f0ff', '#ff9f00', '#00e676']
+  const colors = ['#00f0ff', '#ff9f00', '#00e676'] // 多系列颜色，依次分配
   return {
     ...commonOption,
     grid: { left: '10%', right: '5%', bottom: '15%', top: '15%' },
@@ -186,6 +219,7 @@ function buildTrendLineOption(c: TrendLineChartData | null): EChartsOption {
       axisLabel: { color: '#fff', fontSize: 9 },
       splitLine: { lineStyle: { color: 'rgba(0,240,255,0.1)' } },
     },
+    // 利用 map 动态生成多条折线系列，颜色循环取用
     series: (c?.series ?? []).map((s, i) => ({
       type: 'line' as const,
       smooth: true,
@@ -197,13 +231,18 @@ function buildTrendLineOption(c: TrendLineChartData | null): EChartsOption {
     })),
   }
 }
+/**
+ * 构建工单量按月统计分组柱状图 option
+ * @param c 接口数据（categories: 月份列表，series: 多分组系列）
+ * axisPointer:'shadow' 使 tooltip 显示阴影背景，便于对比各分组数值
+ */
 function buildGroupBarOption(c: GroupBarChartData | null): EChartsOption {
-  const colors = ['#2979ff', '#ff9f00', '#00e676']
+  const colors = ['#2979ff', '#ff9f00', '#00e676'] // 各分组颜色，依次分配
   return {
     ...commonOption,
     tooltip: { trigger: 'axis', backgroundColor: 'rgba(11,17,26,0.9)', borderColor: '#00f0ff', textStyle: { color: '#fff' }, axisPointer: { type: 'shadow' } },
     legend: {
-      data: (c?.series ?? []).map(s => s.name),
+      data: (c?.series ?? []).map(s => s.name), // 从接口数据动态生成图例条目
       textStyle: { color: '#fff' },
       top: '5%',
       right: 'center',
@@ -226,6 +265,7 @@ function buildGroupBarOption(c: GroupBarChartData | null): EChartsOption {
       axisLabel: { color: '#fff' },
       splitLine: { lineStyle: { color: 'rgba(0,240,255,0.1)' } },
     },
+    // 循环生成各分组柱状图系列
     series: (c?.series ?? []).map((s, i) => ({
       name: s.name,
       type: 'bar' as const,
@@ -235,59 +275,36 @@ function buildGroupBarOption(c: GroupBarChartData | null): EChartsOption {
   }
 }
 
-// 环形进度百分比文字（响应式）
+// ── 环形图配套文字（响应式 computed）─────────────────
+// 这些值显示在 ringChart 图表 DOM 的正中心覆盖层，
+// 使用 computed 确保接口数据更新时自动同步刷新
+
+/** 处理率百分比文字，例如："20%" */
 const ringPercent = computed(() => {
   const v = ringChart.value?.value ?? 0
   const t = ringChart.value?.total ?? 100
   return `${Math.round(v / t * 100)}%`
 })
 
+/** 环形图中心小标题，例如："处理率" */
 const ringCenterLabel = computed(() => ringChart.value?.label ?? '处理率')
+/** 环形图上方大数字，例如：6236（本月已处理工单数） */
 const ringCenterValue = computed(() => ringChart.value?.center?.value ?? 0)
+/** 环形图上方描述文字，例如："本月处理工单" */
 const ringCenterTitle = computed(() => ringChart.value?.center?.label ?? '本月处理工单')
 
-function initCharts() {
-  if (barChartRef.value) { barChart_inst = echarts.init(barChartRef.value); barChart_inst.setOption(buildBarOption(barChart.value)) }
-  if (lineChartRef.value) { lineChart_inst = echarts.init(lineChartRef.value); lineChart_inst.setOption(buildLineOption(lineChart.value)) }
-  if (pieChartRef.value) { pieChart_inst = echarts.init(pieChartRef.value); pieChart_inst.setOption(buildPieOption(pieChart.value)) }
-  if (ringChartRef.value) { ringChart_inst = echarts.init(ringChartRef.value); ringChart_inst.setOption(buildRingOption(ringChart.value)) }
-  if (trendLineChartRef.value) { trendLineChart_inst = echarts.init(trendLineChartRef.value); trendLineChart_inst.setOption(buildTrendLineOption(trendLineChart.value)) }
-  if (groupBarChartRef.value) { groupBarChart_inst = echarts.init(groupBarChartRef.value); groupBarChart_inst.setOption(buildGroupBarOption(groupBarChart.value)) }
-}
+// ── ECharts 图表统一管理 ─────────────────────────────
+// useEChartsManager 自动处理 init/watch/resize/dispose 生命周期
+useEChartsManager([
+  { domRef: barChartRef, dataRef: barChart, buildOption: buildBarOption },
+  { domRef: lineChartRef, dataRef: lineChart, buildOption: buildLineOption },
+  { domRef: pieChartRef, dataRef: pieChart, buildOption: buildPieOption },
+  { domRef: ringChartRef, dataRef: ringChart, buildOption: buildRingOption },
+  { domRef: trendLineChartRef, dataRef: trendLineChart, buildOption: buildTrendLineOption },
+  { domRef: groupBarChartRef, dataRef: groupBarChart, buildOption: buildGroupBarOption },
+])
 
-// 每个图表独立 watch，数据就绪后各自更新（兼容 SSR 水合）
-watch(barChart, c => barChart_inst?.setOption(buildBarOption(c)))
-watch(lineChart, c => lineChart_inst?.setOption(buildLineOption(c)))
-watch(pieChart, c => pieChart_inst?.setOption(buildPieOption(c)))
-watch(ringChart, c => ringChart_inst?.setOption(buildRingOption(c)))
-watch(trendLineChart, c => trendLineChart_inst?.setOption(buildTrendLineOption(c)))
-watch(groupBarChart, c => groupBarChart_inst?.setOption(buildGroupBarOption(c)))
-
-function handleResize() {
-  barChart_inst?.resize()
-  lineChart_inst?.resize()
-  pieChart_inst?.resize()
-  ringChart_inst?.resize()
-  trendLineChart_inst?.resize()
-  groupBarChart_inst?.resize()
-}
-
-onMounted(() => {
-  nextTick(() => {
-    initCharts()
-    useEventListener(window, 'resize', handleResize)
-  })
-})
-
-onBeforeUnmount(() => {
-  barChart_inst?.dispose()
-  lineChart_inst?.dispose()
-  pieChart_inst?.dispose()
-  ringChart_inst?.dispose()
-  trendLineChart_inst?.dispose()
-  groupBarChart_inst?.dispose()
-})
-
+// ── 页面标题 ───────────────────────────────────────
 const title = ref('交控稽核工单大数据看板')
 useHead({ title: title.value })
 </script>
@@ -304,7 +321,7 @@ useHead({ title: title.value })
       <header class="mb-5 px-8 py-3 flex items-center justify-between relative">
         <!-- 左侧时间 -->
         <div class="text-lg font-mono min-w-[180px]">
-          {{ currentTime }}
+          {{ currentDate }} {{ currentTime }}
         </div>
         <!-- 中间标题 -->
         <div class="text-center flex-1 relative">

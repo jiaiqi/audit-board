@@ -1,109 +1,111 @@
 <script setup lang="ts">
+/**
+ * in-transit-audit.vue — 交控在途稽核大数据分析看板
+ *
+ * 页面展示内容：
+ *   - 顶部：实时时钟+日期星期 + 看板标题 + 全屏切换
+ *   - 左列：分公司成果占比（玫瑰饼图）+ 金额/数量排名 TOP10（横向柱状图×2）
+ *   - 中列：统计卡片（2×3）+ 在途设备心跳监测表格 + 数量/金额占比（饼图×2）
+ *   - 右列：车型占比（玫瑰饼图）+ 数量本月趋势（折线图）+ 金额本月变化（纵向柱状图）
+ *
+ * 图表数据来源：useInTransitData composable（每个图表独立接口）
+ * ECharts 生命周期：useEChartsManager 统一管理 init/watch/resize/dispose
+ */
 import type { EChartsOption } from 'echarts'
+// 从 useInTransitData composable 导入在途看板专用数据类型
 import type { InTransitHBarChartData, InTransitPieChartData } from '~/composables/useInTransitData'
 
 import * as echarts from 'echarts'
 
+// 指定此页面使用 audit 布局（全屏深色背景）
 definePageMeta({
   layout: 'audit',
 })
 
-// 实时时间
-const currentTime = ref('')
-const currentDate = ref('')
+// ── 实时时钟 + 日期星期 ──────────────────────────────
+// useBoardClock 默认开启 showDate，同时提供 currentTime（HH:mm:ss）
+// 和 currentDate（YYYY年MM月DD日），组件卸载时自动停止计时器
+const { currentTime, currentDate, currentWeek } = useBoardClock()
 
-function updateTime() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const hours = String(now.getHours()).padStart(2, '0')
-  const minutes = String(now.getMinutes()).padStart(2, '0')
-  const seconds = String(now.getSeconds()).padStart(2, '0')
-  const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-  const weekDay = weekDays[now.getDay()]
-  currentTime.value = `${hours}:${minutes}:${seconds}`
-  currentDate.value = `${year}年${month}月${day}日 ${weekDay}`
-}
-
-useIntervalFn(updateTime, 1000)
-onMounted(updateTime)
-
-// 全屏
+// ── 全屏切换 ──────────────────────────────────────
+// isFullscreen: 当前是否全屏（用于切换 SVG 图标）
+// toggleFullscreen: 点击按钮时调用
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
-// 1920×1080 自适应缩放
+// ── 屏幕自适应缩放 ────────────────────────────────
+// 以 1920×1080 为基准分辨率等比缩放，screenRef 绑定到缩放容器
 const { screenRef } = useScreenScale({ width: 1920, height: 1080 })
 
-// ── 接口数据（每个图表独立字段）──────────────────────
+// ── 接口数据（每个图表独立接口）─────────────────────
+// useInTransitData 封装了所有图表的 useFetch 请求，
+// 各字段均为 ComputedRef，数据就绪后自动触发 useEChartsManager 内的 watch 更新图表
 const {
-  stats,
-  devices,
-  leftPieChart,
-  amountRankChart,
-  quantityRankChart,
-  centerPieChart,
-  centerRingChart,
-  vehiclePieChart,
-  trendLineChart,
-  amountBarChart,
+  stats, // 统计卡片数据（6个指标）
+  devices, // 在途设备心跳监测表格数据
+  leftPieChart, // 左上：分公司本月成果占比（玫瑰饼图）
+  amountRankChart, // 左下：本月成果金额排名 TOP10（横向柱状图）
+  quantityRankChart, // 左下：本月成果数量排名 TOP10（横向柱状图）
+  centerPieChart, // 中下左：分公司本月成果数量占比（玫瑰饼图）
+  centerRingChart, // 中下右：成果金额占比（环形饼图）
+  vehiclePieChart, // 右上上：车型占比（玫瑰饼图）
+  trendLineChart, // 右上下：在途成果数量本月趋势（折线图）
+  amountBarChart, // 右下：在途成果金额本月变化（纵向柱状图）
 } = useInTransitData()
 
-// ── ECharts 实例（_inst 后缀，避免与接口数据同名冲突）──
+// ── ECharts 容器 DOM 引用 ─────────────────────────
+// 每个 ref 对应 template 中同名的 ref="xxx"，由 useEChartsManager 读取并调用 echarts.init
+const leftPieChartRef = ref<HTMLElement>()
+const amountRankChartRef = ref<HTMLElement>()
+const quantityRankChartRef = ref<HTMLElement>()
+const centerPieChartRef = ref<HTMLElement>()
+const centerRingChartRef = ref<HTMLElement>()
+const vehiclePieChartRef = ref<HTMLElement>()
+const trendLineChartRef = ref<HTMLElement>()
+const amountBarChartRef = ref<HTMLElement>()
+
+// ── ECharts 公共配置 ──────────────────────────────
+// 所有图表共享：透明背景 + 微软雅黑字体，通过展开运算符合并到各图表 option
 const commonOption: EChartsOption = {
   backgroundColor: 'transparent',
   textStyle: { fontFamily: 'Microsoft YaHei, sans-serif' },
 }
 
-const leftPieChartRef = ref<HTMLElement>()
-let leftPieChart_inst: echarts.ECharts | null = null
+// ── 图表 Option 构建函数 ───────────────────────────
+// 每个 build 函数只负责「样式 + 结构」，数据通过参数 c 传入，
+// 参数为 null 时用空数组兜底，避免图表初始化阶段报错。
 
-const amountRankChartRef = ref<HTMLElement>()
-let amountRankChart_inst: echarts.ECharts | null = null
-
-const quantityRankChartRef = ref<HTMLElement>()
-let quantityRankChart_inst: echarts.ECharts | null = null
-
-const centerPieChartRef = ref<HTMLElement>()
-let centerPieChart_inst: echarts.ECharts | null = null
-
-const centerRingChartRef = ref<HTMLElement>()
-let centerRingChart_inst: echarts.ECharts | null = null
-
-const vehiclePieChartRef = ref<HTMLElement>()
-let vehiclePieChart_inst: echarts.ECharts | null = null
-
-const trendLineChartRef = ref<HTMLElement>()
-let trendLineChart_inst: echarts.ECharts | null = null
-
-const amountBarChartRef = ref<HTMLElement>()
-let amountBarChart_inst: echarts.ECharts | null = null
-
-// ── 图表构建函数 ──────────────────────────────────
-/** 玫瑰饼图 */
+/**
+ * 构建玫瑰饼图 option（分公司成果占比 / 数量占比 / 车型占比共用）
+ * @param c 接口数据（data: [{value, name}] 格式）
+ * roseType:'area' 使面积而非半径代表大小，视觉更均衡
+ */
 function buildRosePie(c: InTransitPieChartData | null): EChartsOption {
-  const pieColors = ['#2979ff', '#00e676', '#ff9f00', '#00f0ff']
+  const pieColors = ['#2979ff', '#00e676', '#ff9f00', '#00f0ff'] // 预设调色盘，循环取用
   return {
     ...commonOption,
     tooltip: { trigger: 'item', backgroundColor: 'rgba(11,17,26,0.9)', borderColor: '#00f0ff', textStyle: { color: '#fff' }, formatter: '{b}: {c} ({d}%)' },
-    legend: { show: false },
+    legend: { show: false }, // 依靠外部标签显示名称，图例隐藏节省空间
     series: [{
       type: 'pie',
-      roseType: 'area',
-      radius: ['20%', '70%'],
+      roseType: 'area', // 南丁格尔玫瑰图，面积正比于数值
+      radius: ['20%', '70%'], // 内半径留空形成空心效果
       center: ['50%', '50%'],
-      avoidLabelOverlap: true,
+      avoidLabelOverlap: true, // 自动规避标签重叠
       itemStyle: { borderRadius: 0, borderColor: '#0a1628', borderWidth: 0 },
-      label: { show: true, position: 'outside', color: '#fff', fontSize: 10, formatter: '{b}\n{d}%' },
+      label: { show: true, position: 'outside', color: '#fff', fontSize: 14, formatter: '{b}\n\n{d}%' },
       labelLine: { lineStyle: { color: 'rgba(0,240,255,0.3)' } },
       data: (c?.data ?? []).map((d, i) => ({ ...d, itemStyle: { color: pieColors[i % pieColors.length] } })),
     }],
   }
 }
 
-/** 环形图（成果金额占比） */
+/**
+ * 构建环形饼图 option（推送金额 vs 成果金额占比）
+ * @param c 接口数据（data: [{value, name}] 格式）
+ * 使用较大内半径形成细环效果，与玫瑰饼图形成视觉区分
+ */
 function buildRingPie(c: InTransitPieChartData | null): EChartsOption {
-  const ringColors = ['#00e676', '#ff9f00']
+  const ringColors = ['#00e676', '#ff9f00'] // 绿色=推送金额，橙色=成果金额
   return {
     ...commonOption,
     tooltip: { trigger: 'item', backgroundColor: 'rgba(11,17,26,0.9)', borderColor: '#00f0ff', textStyle: { color: '#fff' }, formatter: '{b}: {c} ({d}%)' },
@@ -111,18 +113,24 @@ function buildRingPie(c: InTransitPieChartData | null): EChartsOption {
     series: [{
       name: '金额占比',
       type: 'pie',
-      radius: ['44%', '70%'],
+      radius: ['44%', '70%'], // 较大内半径，形成细环区别于玫瑰饼
       center: ['50%', '50%'],
       itemStyle: { borderRadius: 4, borderColor: '#0a1628', borderWidth: 0 },
-      label: { show: true, position: 'outside', color: '#fff', fontSize: 9, formatter: '{b}\n{d}%' },
+      label: { show: true, position: 'outside', color: '#fff', fontSize: 14, formatter: '{b}\n\n{d}%' },
       labelLine: { lineStyle: { color: 'rgba(0,240,255,0.3)' } },
       data: (c?.data ?? []).map((d, i) => ({ ...d, itemStyle: { color: ringColors[i % ringColors.length] } })),
     }],
   }
 }
 
-/** 横向柱状图（成果金额/数量排名） */
+/**
+ * 构建横向柱状图 option（成果金额/数量排名 TOP10 共用）
+ * @param c 接口数据（categories: 收费站列表，series[0].data: 数值列表）
+ * @param isAmount true=金额图（青色渐变），false=数量图（蓝色渐变）
+ * Y 轴为类目轴（收费站名），X 轴为数值轴，柱子水平延伸
+ */
 function buildHBarChart(c: InTransitHBarChartData | null, isAmount: boolean): EChartsOption {
+  // 根据图表类型选择颜色：金额=青色，数量=蓝色；渐变从右（深）到左（浅）
   const barColor = isAmount ? '#00f0ff' : '#2979ff'
   const barColorEnd = isAmount ? 'rgba(0,240,255,0.25)' : 'rgba(41,121,255,0.25)'
   return {
@@ -143,13 +151,18 @@ function buildHBarChart(c: InTransitHBarChartData | null, isAmount: boolean): EC
       type: 'bar',
       data: c?.series[0]?.data ?? [],
       barWidth: '55%',
+      // 水平渐变（1,0,0,0 = 从右到左），右端深色为主色，右侧圆角
       itemStyle: { color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [{ offset: 0, color: barColor }, { offset: 1, color: barColorEnd }]), borderRadius: [0, 3, 3, 0] },
       label: { show: true, position: 'right', color: '#fff', fontSize: 9 },
     }],
   }
 }
 
-/** 折线趋势图 */
+/**
+ * 构建在途成果数量本月趋势折线图 option
+ * @param c 接口数据（categories: 日期列表，series[0].data: 数量列表）
+ * 使用渐变面积填充增强趋势感，boundaryGap:false 使折线从坐标轴起点开始
+ */
 function buildTrendLine(c: InTransitHBarChartData | null): EChartsOption {
   return {
     ...commonOption,
@@ -158,7 +171,7 @@ function buildTrendLine(c: InTransitHBarChartData | null): EChartsOption {
     grid: { left: '3%', right: '4%', bottom: '5%', top: '20%', containLabel: true },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
+      boundaryGap: false, // 折线从坐标轴起点开始，不留空白
       data: c?.categories ?? [],
       axisLine: { lineStyle: { color: 'rgba(0,240,255,0.3)' } },
       axisLabel: { color: '#fff', fontSize: 9 },
@@ -168,9 +181,10 @@ function buildTrendLine(c: InTransitHBarChartData | null): EChartsOption {
     series: [{
       name: '数量',
       type: 'line',
-      smooth: true,
+      smooth: true, // 平滑曲线，视觉更柔和
       data: c?.series[0]?.data ?? [],
       lineStyle: { color: '#00f0ff', width: 2 },
+      // 从线条颜色向透明的垂直渐变面积填充
       areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(0,240,255,0.28)' }, { offset: 1, color: 'rgba(0,240,255,0.02)' }]) },
       itemStyle: { color: '#00f0ff' },
       symbol: 'circle',
@@ -179,7 +193,11 @@ function buildTrendLine(c: InTransitHBarChartData | null): EChartsOption {
   }
 }
 
-/** 纵向柱状图（金额变化） */
+/**
+ * 构建在途成果金额本月变化纵向柱状图 option
+ * @param c 接口数据（categories: 日期列表，series[0].data: 金额列表）
+ * 使用橙色垂直渐变，顶部圆角，与趋势折线图形成颜色区分
+ */
 function buildAmountBar(c: InTransitHBarChartData | null): EChartsOption {
   return {
     ...commonOption,
@@ -199,46 +217,31 @@ function buildAmountBar(c: InTransitHBarChartData | null): EChartsOption {
       type: 'bar',
       data: c?.series[0]?.data ?? [],
       barWidth: '48%',
+      // 垂直渐变（0,0,0,1 = 从上到下），顶部橙色到透明，顶部圆角
       itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff9f00' }, { offset: 1, color: 'rgba(255,159,0,0.25)' }]), borderRadius: [3, 3, 0, 0] },
     }],
   }
 }
 
-function initCharts() {
-  if (leftPieChartRef.value) { leftPieChart_inst = echarts.init(leftPieChartRef.value); leftPieChart_inst.setOption(buildRosePie(leftPieChart.value)) }
-  if (amountRankChartRef.value) { amountRankChart_inst = echarts.init(amountRankChartRef.value); amountRankChart_inst.setOption(buildHBarChart(amountRankChart.value, true)) }
-  if (quantityRankChartRef.value) { quantityRankChart_inst = echarts.init(quantityRankChartRef.value); quantityRankChart_inst.setOption(buildHBarChart(quantityRankChart.value, false)) }
-  if (centerPieChartRef.value) { centerPieChart_inst = echarts.init(centerPieChartRef.value); centerPieChart_inst.setOption(buildRosePie(centerPieChart.value)) }
-  if (centerRingChartRef.value) { centerRingChart_inst = echarts.init(centerRingChartRef.value); centerRingChart_inst.setOption(buildRingPie(centerRingChart.value)) }
-  if (vehiclePieChartRef.value) { vehiclePieChart_inst = echarts.init(vehiclePieChartRef.value); vehiclePieChart_inst.setOption(buildRosePie(vehiclePieChart.value)) }
-  if (trendLineChartRef.value) { trendLineChart_inst = echarts.init(trendLineChartRef.value); trendLineChart_inst.setOption(buildTrendLine(trendLineChart.value)) }
-  if (amountBarChartRef.value) { amountBarChart_inst = echarts.init(amountBarChartRef.value); amountBarChart_inst.setOption(buildAmountBar(amountBarChart.value)) }
-}
+// ── ECharts 图表统一生命周期管理 ─────────────────────
+// useEChartsManager 接收图表描述符数组，自动完成：
+//   1. onMounted(nextTick) 中批量 echarts.init + setOption（使用当前接口数据）
+//   2. 每个 dataRef 独立 watch，数据就绪后立即 setOption（互不阻塞）
+//   3. window resize 时批量调用 resize() 重绘图表
+//   4. onBeforeUnmount 时批量 dispose，防止内存泄漏
+// isAmount 参数通过 lambda 包装传入 buildHBarChart，区分颜色
+useEChartsManager([
+  { domRef: leftPieChartRef, dataRef: leftPieChart, buildOption: buildRosePie },
+  { domRef: amountRankChartRef, dataRef: amountRankChart, buildOption: c => buildHBarChart(c, true) }, // 金额排名：青色
+  { domRef: quantityRankChartRef, dataRef: quantityRankChart, buildOption: c => buildHBarChart(c, false) }, // 数量排名：蓝色
+  { domRef: centerPieChartRef, dataRef: centerPieChart, buildOption: buildRosePie },
+  { domRef: centerRingChartRef, dataRef: centerRingChart, buildOption: buildRingPie },
+  { domRef: vehiclePieChartRef, dataRef: vehiclePieChart, buildOption: buildRosePie },
+  { domRef: trendLineChartRef, dataRef: trendLineChart, buildOption: buildTrendLine },
+  { domRef: amountBarChartRef, dataRef: amountBarChart, buildOption: buildAmountBar },
+])
 
-// 每个图表独立 watch，数据就绪后各自更新（兼容 SSR 水合）
-watch(leftPieChart, c => leftPieChart_inst?.setOption(buildRosePie(c)))
-watch(amountRankChart, c => amountRankChart_inst?.setOption(buildHBarChart(c, true)))
-watch(quantityRankChart, c => quantityRankChart_inst?.setOption(buildHBarChart(c, false)))
-watch(centerPieChart, c => centerPieChart_inst?.setOption(buildRosePie(c)))
-watch(centerRingChart, c => centerRingChart_inst?.setOption(buildRingPie(c)))
-watch(vehiclePieChart, c => vehiclePieChart_inst?.setOption(buildRosePie(c)))
-watch(trendLineChart, c => trendLineChart_inst?.setOption(buildTrendLine(c)))
-watch(amountBarChart, c => amountBarChart_inst?.setOption(buildAmountBar(c)))
-
-function handleResize() {
-  leftPieChart_inst?.resize(); amountRankChart_inst?.resize(); quantityRankChart_inst?.resize()
-  centerPieChart_inst?.resize(); centerRingChart_inst?.resize()
-  vehiclePieChart_inst?.resize(); trendLineChart_inst?.resize(); amountBarChart_inst?.resize()
-}
-
-onMounted(() => { nextTick(() => { initCharts(); useEventListener(window, 'resize', handleResize) }) })
-
-onBeforeUnmount(() => {
-  leftPieChart_inst?.dispose(); amountRankChart_inst?.dispose(); quantityRankChart_inst?.dispose()
-  centerPieChart_inst?.dispose(); centerRingChart_inst?.dispose()
-  vehiclePieChart_inst?.dispose(); trendLineChart_inst?.dispose(); amountBarChart_inst?.dispose()
-})
-
+// ── 页面标题 ───────────────────────────────────────
 useHead({ title: '交控在途稽核大数据分析看板' })
 </script>
 
@@ -252,8 +255,13 @@ useHead({ title: '交控在途稽核大数据分析看板' })
           <div class="time-big">
             {{ currentTime }}
           </div>
-          <div class="time-date">
-            {{ currentDate }}
+          <div class="time-date flex flex-col">
+            <span>
+              {{ currentDate }}
+            </span>
+            <span>
+              {{ currentWeek }}
+            </span>
           </div>
         </div>
         <div class="header-title">
@@ -460,14 +468,17 @@ useHead({ title: '交控在途稽核大数据分析看板' })
 
 .header-time {
   min-width: 200px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-family: initial;
 }
 
 .time-big {
-  font-size: 28px;
-  font-weight: bold;
-  font-family: monospace;
-  color: #00f0ff;
-  text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+  font-size: 32px;
+  color: #fff;
+  /* color: #00f0ff; */
+  /* text-shadow: 0 0 20px rgba(0, 240, 255, 0.5); */
   line-height: 1.1;
 }
 
@@ -508,6 +519,7 @@ useHead({ title: '交控在途稽核大数据分析看板' })
   white-space: nowrap;
   text-shadow: 0px 2px 6px rgba(0, 190, 231, 1);
   line-height: 45px;
+  margin-top: -20px;
 }
 
 .header-actions {
