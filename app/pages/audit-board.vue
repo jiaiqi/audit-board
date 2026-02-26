@@ -70,16 +70,16 @@ const barOption: EChartsOption = {
       '公司简称十',
     ],
     axisLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.3)' } },
-    axisLabel: { color: '#a6b9c8', fontSize: 10, interval: 0, rotate: 30 },
+    axisLabel: { color: '#fff', fontSize: 10, interval: 0, rotate: 30 },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     name: '',
-    nameTextStyle: { color: '#a6b9c8' },
+    nameTextStyle: { color: '#fff' },
     axisLine: { show: false },
     axisLabel: {
-      color: '#a6b9c8',
+      color: '#fff',
       formatter: (value: number) => `${value}万元`,
     },
     splitLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.1)' } },
@@ -123,8 +123,8 @@ const lineOption: EChartsOption = {
   ...commonOption,
   legend: {
     data: ['追缴金额'],
-    textStyle: { color: '#a6b9c8' },
-    top: 5,
+    textStyle: { color: '#fff' },
+    top: '5%',
     right: 'center',
     icon: 'circle',
     itemWidth: 8,
@@ -140,7 +140,7 @@ const lineOption: EChartsOption = {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    top: '15%',
+    top: '20%',
     containLabel: true,
   },
   xAxis: {
@@ -148,15 +148,15 @@ const lineOption: EChartsOption = {
     boundaryGap: false,
     data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
     axisLine: { lineStyle: { color: 'rgba(255, 159, 0, 0.3)' } },
-    axisLabel: { color: '#a6b9c8' },
+    axisLabel: { color: '#fff' },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     name: '金额(万元)',
-    nameTextStyle: { color: '#a6b9c8' },
+    nameTextStyle: { color: '#fff' },
     axisLine: { show: false },
-    axisLabel: { color: '#a6b9c8' },
+    axisLabel: { color: '#fff' },
     splitLine: { lineStyle: { color: 'rgba(255, 159, 0, 0.1)' } },
   },
   series: [
@@ -213,7 +213,7 @@ const pieOption: EChartsOption = {
       label: {
         show: true,
         position: 'outside',
-        color: '#a6b9c8',
+        color: '#fff',
         formatter: '{b}: {c}',
       },
       labelLine: {
@@ -280,13 +280,13 @@ const trendLineOption: EChartsOption = {
     type: 'category',
     data: ['12-01', '12-02', '12-03', '12-04', '12-05', '12-06', '12-07', '12-08', '12-09', '12-10', '12-11', '12-12'],
     axisLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.3)' } },
-    axisLabel: { color: '#a6b9c8', fontSize: 9 },
+    axisLabel: { color: '#fff', fontSize: 9 },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     axisLine: { show: false },
-    axisLabel: { color: '#a6b9c8', fontSize: 9 },
+    axisLabel: { color: '#fff', fontSize: 9 },
     splitLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.1)' } },
   },
   series: [
@@ -335,8 +335,8 @@ const groupBarOption: EChartsOption = {
   },
   legend: {
     data: ['发起工单', '处理工单', '追缴工单'],
-    textStyle: { color: '#a6b9c8' },
-    top: 0,
+    textStyle: { color: '#fff' },
+    top: '5%',
     right: 'center',
     itemWidth: 12,
     itemHeight: 12,
@@ -345,22 +345,22 @@ const groupBarOption: EChartsOption = {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    top: '15%',
+    top: '20%',
     containLabel: true,
   },
   xAxis: {
     type: 'category',
     data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
     axisLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.3)' } },
-    axisLabel: { color: '#a6b9c8' },
+    axisLabel: { color: '#fff' },
     axisTick: { show: false },
   },
   yAxis: {
     type: 'value',
     name: '工单数',
-    nameTextStyle: { color: '#a6b9c8' },
+    nameTextStyle: { color: '#fff' },
     axisLine: { show: false },
-    axisLabel: { color: '#a6b9c8' },
+    axisLabel: { color: '#fff' },
     splitLine: { lineStyle: { color: 'rgba(0, 240, 255, 0.1)' } },
   },
   series: [
@@ -436,15 +436,15 @@ onBeforeUnmount(() => {
   trendLineChart?.dispose()
   groupBarChart?.dispose()
 })
-
+const title = ref('交控稽核工单看板')
 useHead({
-  title: '交控稽核大数据分析看板',
+  title: title.value,
 })
 </script>
 
 <template>
   <div
-    class="bg-[#0b111a] bg-[url('/assets/images/bg01.jpg')] h-screen w-screen overflow-hidden bg-size-[100%_100%] bg-center"
+    class="page-enter-active bg-[#0b111a] bg-[url('/assets/images/bg01.jpg')] h-screen w-screen overflow-hidden bg-size-[100%_100%] bg-center"
   >
     <div
       ref="screenRef"
@@ -462,13 +462,13 @@ useHead({
             class="text-2xl text-[#EBF9FF] tracking-[8px] font-bold inline-block relative"
             style="text-shadow:0px 2px 6px rgba(0,190,231,1);"
           >
-            交控稽核大数据分析看板
+            {{ title }}
           </h1>
         </div>
         <!-- 右侧按钮 -->
         <div class="flex gap-4 min-w-[180px] items-center justify-end">
           <button
-            class="text-[#a6b9c8] cursor-pointer transition-colors hover:text-[#00f0ff]"
+            class="text-[#fff] cursor-pointer transition-colors hover:text-[#00f0ff]"
             @click="toggleFullscreen"
           >
             <!-- 进入全屏图标 -->
@@ -554,7 +554,7 @@ useHead({
                 </div>
                 <div class="text-[48px] text-#FFCD84 font-bold">
                   40.17
-                  <span class="text-base ml-1">万</span>
+                  <span class="ml-1">万</span>
                 </div>
               </div>
               <img
@@ -575,7 +575,7 @@ useHead({
                 </div>
                 <div class="text-[48px] text-#FFCD84 font-bold">
                   62.23
-                  <span class="text-base text-[#a6b9c8] ml-1">万</span>
+                  <span class="text-[#fff] ml-1">万</span>
                 </div>
               </div>
               <img
@@ -592,7 +592,7 @@ useHead({
             class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col h-full relative"
           >
             <div class="center-block-title bg1">
-              <div class="text-base text-white font-bold mt--28px">
+              <div class="text-white font-bold mt--28px">
                 分公司追缴金额(近30日TOP10)
               </div>
             </div>
@@ -606,7 +606,7 @@ useHead({
             class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col relative"
           >
             <div class="center-block-title bg1">
-              <div class="text-base text-white font-bold mt--28px">
+              <div class="text-white font-bold mt--28px">
                 追缴金额历史趋势
               </div>
             </div>
@@ -622,7 +622,7 @@ useHead({
             class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col h-438px relative"
           >
             <div class="center-block-title bg2">
-              <div class="text-base text-white font-bold mt--28px">
+              <div class="text-white font-bold mt--28px">
                 特情车辆类型数量(近30日)
               </div>
             </div>
@@ -637,7 +637,7 @@ useHead({
               class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col relative"
             >
               <div class="center-block-title bg3">
-                <div class="text-base text-white font-bold mt--28px">
+                <div class="text-white font-bold mt--28px">
                   指标
                 </div>
               </div>
@@ -672,11 +672,11 @@ useHead({
             </div>
 
             <div
-              class="center-block border border-[rgba(0,240,255,0.3)] flex flex-1 flex-col relative"
+              class="center-block pt-10px border border-[rgba(0,240,255,0.3)] flex flex-1 flex-col relative"
             >
               <div class="center-block-title">
-                <span class="i-ri:radio-button-line text-#6ADEFE ml--20px mr-14px inline-block" />
-                <div class="text-base text-white font-bold">
+                <span class="i-ri:radio-button-line text-base text-#6ADEFE ml--20px mr-14px inline-block" />
+                <div class="text-white font-bold">
                   上月追缴金额日变化趋势图
                 </div>
               </div>
@@ -692,7 +692,7 @@ useHead({
             class="center-block border border-[rgba(0,240,255,0.3)] flex flex-col relative"
           >
             <div class="center-block-title bg4">
-              <div class="text-base text-white font-bold mt--28px">
+              <div class="text-white font-bold mt--28px">
                 工单量按月统计
               </div>
             </div>
@@ -754,13 +754,16 @@ useHead({
   flex-direction: column;
   background-color: rgba(0, 178, 255, 0.15);
 }
-
+.center-block.pt-10px {
+  padding-top: 10px;
+}
 .center-block-title {
   background-size: 100% 100%;
   height: 39px;
   display: flex;
   align-items: center;
   padding-left: 34px;
+  font-size: 20px;
 }
 
 .center-block-title.bg1 {
@@ -778,5 +781,20 @@ useHead({
 
 .center-block-title.bg4 {
   background-image: url('/assets/images/title_bg_4.png');
+}
+
+.page-enter-active {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
