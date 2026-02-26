@@ -794,7 +794,7 @@ useHead({ title: '交控在途稽核大数据分析看板' })
   position: relative;
   width: var(--width);
   transform-origin: left center;
-  animation: prog-fill 1s ease-out forwards;
+  animation: prog-fill 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 @keyframes prog-fill {
   from {
