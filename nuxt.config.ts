@@ -11,6 +11,7 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt',
     '@nuxt/eslint',
   ],
+  ssr: false,
 
   devtools: {
     enabled: true,
@@ -19,6 +20,11 @@ export default defineNuxtConfig({
   app: {
     head: {
       viewport: 'width=device-width,initial-scale=1',
+      // 运行时外部配置，部署后直接替换 public/config.js 即可修改接口地址
+      script: [
+        { src: '/board/config.js' },
+        { src: '../js/server.js' },
+      ],
       link: [
         { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
         { rel: 'icon', type: 'image/svg+xml', href: '/nuxt.svg' },
@@ -41,9 +47,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // 设为 true 使用本地 mock 接口，设为 false 切换到真实后端
-      useMock: true,
+      // 也可通过环境变量 NUXT_PUBLIC_USE_MOCK=true 覆盖
+      useMock: false,
       // 真实接口地址前缀（useMock=false 时生效）
-      apiBase: 'http://your-backend-api.com',
+      // 运行时可通过 public/config.js 中的 window.__APP_CONFIG__.apiBase 覆盖
+      apiBase: 'http://30.61.1.21:180',
     },
   },
 
