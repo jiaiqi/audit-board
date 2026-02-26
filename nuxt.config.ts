@@ -2,6 +2,7 @@ import { pwa } from './app/config/pwa'
 import { appDescription } from './app/constants/index'
 
 export default defineNuxtConfig({
+
   modules: [
     '@vueuse/nuxt',
     '@unocss/nuxt',
@@ -31,10 +32,19 @@ export default defineNuxtConfig({
         { name: 'theme-color', media: '(prefers-color-scheme: dark)', content: '#222222' },
       ],
     },
+    baseURL: '/board',
   },
 
   colorMode: {
     classSuffix: '',
+  },
+  runtimeConfig: {
+    public: {
+      // 设为 true 使用本地 mock 接口，设为 false 切换到真实后端
+      useMock: true,
+      // 真实接口地址前缀（useMock=false 时生效）
+      apiBase: 'http://your-backend-api.com',
+    },
   },
 
   future: {
@@ -59,7 +69,7 @@ export default defineNuxtConfig({
     },
     prerender: {
       crawlLinks: false,
-      routes: ['/'],
+      routes: ['/', '/work-order', '/in-transit-audit'],
       ignore: ['/hi'],
     },
   },
