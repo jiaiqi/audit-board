@@ -217,7 +217,7 @@ useEChartsManager([
                   />
                 </div>
               </div>
-              <img :src="`/assets/icons/0${i + 1}.png`" alt="" class="top-block__icon">
+              <img :src="`/board/assets/icons/0${i + 1}.png`" alt="" class="top-block__icon">
             </div>
           </div>
         </div>
@@ -263,7 +263,7 @@ useEChartsManager([
               </div>
               <div class="ring-row">
                 <div class="ring-row__left">
-                  <img src="/assets/icons/05.png" alt="">
+                  <img :src="`${useRuntimeConfig().app.baseURL}assets/icons/05.png`" alt="">
                   <div>
                     <div class="ring-row__label">
                       {{ ringCenterTitle }}
@@ -317,7 +317,7 @@ useEChartsManager([
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #0b111a url('/assets/images/bg01.jpg') center / 100% 100%;
+  background: #0b111a url('/board/assets/images/bg01.jpg') center / 100% 100%;
   color: #fff;
 }
 .screen-wrapper {
@@ -350,7 +350,7 @@ useEChartsManager([
 .top-block {
   width: 100%;
   height: 181px;
-  background: url('/assets/images/top-block-bg.png') 100% 100%;
+  background: url('/board/assets/images/top-block-bg.png') 100% 100%;
   background-size: 100% 100%;
   font-family: initial;
   position: relative;
@@ -411,16 +411,16 @@ useEChartsManager([
 }
 .chart-block__title.bg1 {
   padding-left: 40px;
-  background-image: url('/assets/images/title_bg_1.png');
+  background-image: url('/board/assets/images/title_bg_1.png');
 }
 .chart-block__title.bg2 {
-  background-image: url('/assets/images/title_bg_2.png');
+  background-image: url('/board/assets/images/title_bg_2.png');
 }
 .chart-block__title.bg3 {
-  background-image: url('/assets/images/title_bg_3.png');
+  background-image: url('/board/assets/images/title_bg_3.png');
 }
 .chart-block__title.bg4 {
-  background-image: url('/assets/images/title_bg_4.png');
+  background-image: url('/board/assets/images/title_bg_4.png');
 }
 .chart-block__title-text {
   color: #fff;

@@ -178,20 +178,20 @@ useEChartsManager([
         <div class="left-col">
           <div class="panel border h-340px">
             <div class="panel-hd panel-title bg">
-              <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">分公司本月成果占比</span>
+              <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">分公司本月成果占比</span>
             </div>
             <div ref="leftPieRef" class="chart-fill" />
           </div>
           <div class="left-bottom panel border">
             <div class="panel">
               <div class="panel-hd panel-title bg">
-                <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">本月成果金额排名top10</span>
+                <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">本月成果金额排名top10</span>
               </div>
               <div ref="amountRankRef" class="chart-fill" />
             </div>
             <div class="panel">
               <div class="panel-hd">
-                <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">本月成果数量排名top10</span>
+                <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">本月成果数量排名top10</span>
               </div>
               <div ref="quantityRankRef" class="chart-fill" />
             </div>
@@ -228,7 +228,7 @@ useEChartsManager([
           <!-- 设备心跳监测 -->
           <div class="panel p-0 flex flex-col overflow-hidden" style="flex: 1;">
             <div class="panel-hd shrink-0">
-              <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">在途设备心跳监测</span>
+              <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">在途设备心跳监测</span>
             </div>
 
             <BoardScrollTable
@@ -264,13 +264,13 @@ useEChartsManager([
           <div class="center-bottom border">
             <div class="panel">
               <div class="panel-hd">
-                <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">分公司本月成果数量占比</span>
+                <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">分公司本月成果数量占比</span>
               </div>
               <div ref="centerPieRef" class="chart-fill" />
             </div>
             <div class="panel">
               <div class="panel-hd">
-                <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">成果金额占比</span>
+                <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">成果金额占比</span>
               </div>
               <div ref="centerRingRef" class="chart-fill" />
             </div>
@@ -282,20 +282,20 @@ useEChartsManager([
           <div class="right-top panel p-0 border">
             <div class="panel p-0">
               <div class="panel-hd panel-title bg">
-                <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">车型占比</span>
+                <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">车型占比</span>
               </div>
               <div ref="vehiclePieRef" class="chart-fill" />
             </div>
             <div class="panel p-0">
               <div class="panel-hd">
-                <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">在途成果数量本月趋势</span>
+                <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">在途成果数量本月趋势</span>
               </div>
               <div ref="trendLineRef" class="chart-fill" />
             </div>
           </div>
           <div class="panel border" style="flex: 0 0 36%;">
             <div class="panel-hd panel-title bg">
-              <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">在途成果金额本月变化</span>
+              <img class="p-icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png`" alt=""><span class="p-title">在途成果金额本月变化</span>
             </div>
             <div ref="amountBarRef" class="chart-fill" />
           </div>
@@ -318,7 +318,7 @@ useEChartsManager([
 .bg-layer {
   position: absolute;
   inset: 0;
-  background-image: url('/assets/images/bg02.jpg');
+  background-image: url('/board/assets/images/bg02.jpg');
   background-size: cover;
   background-position: center;
   z-index: 0;
@@ -408,7 +408,7 @@ useEChartsManager([
   font-family: -regular;
 }
 .panel-title.bg {
-  background-image: url('/assets/images/page2_block_title_bg.png');
+  background-image: url('/board/assets/images/page2_block_title_bg.png');
   background-size: cover;
 }
 .p-icon {

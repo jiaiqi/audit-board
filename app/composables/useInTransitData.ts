@@ -29,12 +29,12 @@ export interface InTransitHBarChartData { categories: string[], series: InTransi
 /** 统计卡片：单条对象 → 卡片数组 */
 function adaptStats(raw: any): InTransitStat[] {
   return [
-    { key: 'lastMonthCount', label: '上月在途成果数量', value: String(raw.ztjh_cnt_lm ?? '-'), icon: '/assets/icons/a.png' },
-    { key: 'lastMonthAmount', label: '上月在途成果金额', value: String(raw.diff_fee_lm ?? '-'), icon: '/assets/icons/b.png' },
-    { key: 'lastMonthPushCount', label: '上月推送成果数量', value: String(raw.ztjh_cnt_lm_ts ?? '-'), icon: '/assets/icons/c.png' },
-    { key: 'lastMonthPushAmount', label: '上月推送成果金额', value: String(raw.diff_fee_lm_ts ?? '-'), icon: '/assets/icons/d.png' },
-    { key: 'thisMonthCount', label: '本月在途成果数量', value: String(raw.ztjh_cnt_cm ?? '-'), icon: '/assets/icons/e.png' },
-    { key: 'thisMonthAmount', label: '本月在途成果金额', value: String(raw.diff_fee_cm ?? '-'), icon: '/assets/icons/f.png' },
+    { key: 'lastMonthCount', label: '上月在途成果数量', value: String(raw.ztjh_cnt_lm ?? '-'), icon: `${useRuntimeConfig().app.baseURL}assets/icons/a.png` },
+    { key: 'lastMonthAmount', label: '上月在途成果金额', value: String(raw.diff_fee_lm ?? '-'), icon: `${useRuntimeConfig().app.baseURL}assets/icons/b.png` },
+    { key: 'lastMonthPushCount', label: '上月推送成果数量', value: String(raw.ztjh_cnt_lm_ts ?? '-'), icon: `${useRuntimeConfig().app.baseURL}assets/icons/c.png` },
+    { key: 'lastMonthPushAmount', label: '上月推送成果金额', value: String(raw.diff_fee_lm_ts ?? '-'), icon: `${useRuntimeConfig().app.baseURL}assets/icons/d.png` },
+    { key: 'thisMonthCount', label: '本月在途成果数量', value: String(raw.ztjh_cnt_cm ?? '-'), icon: `${useRuntimeConfig().app.baseURL}assets/icons/e.png` },
+    { key: 'thisMonthAmount', label: '本月在途成果金额', value: String(raw.diff_fee_cm ?? '-'), icon: `${useRuntimeConfig().app.baseURL}assets/icons/f.png` },
   ]
 }
 

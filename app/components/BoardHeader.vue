@@ -84,7 +84,7 @@ const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background-image: url('/assets/images/page2_title_bg.png');
+  background-image: url('/board/assets/images/page2_title_bg.png');
   background-position: center bottom;
   background-repeat: no-repeat;
   height: 70px;
