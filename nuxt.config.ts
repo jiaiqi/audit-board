@@ -54,7 +54,7 @@ export default defineNuxtConfig({
       apiBase: 'http://30.61.1.21:180',
       // 接口请求超时时长（毫秒），默认 5000ms
       // 运行时可通过 window.__APP_CONFIG__.apiTimeout 覆盖
-      apiTimeout: 5000,
+      apiTimeout: 20 * 1000,
     },
   },
 

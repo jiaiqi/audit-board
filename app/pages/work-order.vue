@@ -462,6 +462,8 @@ useEChartsManager([
   display: flex;
   flex-direction: column;
   gap: 16px;
+  display: grid;
+  grid-template-rows: 0.8fr 1fr;
 }
 
 /* ══════════════ 环形指标 ══════════════ */

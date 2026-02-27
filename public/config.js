@@ -7,4 +7,5 @@
 window.__APP_CONFIG__ = {
   // 真实后端接口地址前缀（微服务地址）
   // apiBase: 'http://30.61.1.21:180',
+  apiTimeout: 20 * 1000,
 }
