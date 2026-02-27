@@ -150,7 +150,7 @@ export function useApiConfig() {
     mockData: { state: string, data: any, [k: string]: any },
     adaptFn?: (rawData: any) => T,
   ) {
-    if (useMock && import.meta.dev) {
+    if (useMock) {
       return useAsyncData<T | null>(serviceName, () =>
         Promise.resolve(processResponse<T>(mockData, adaptFn, `[mock] ${serviceName}`)))
     }
@@ -175,7 +175,7 @@ export function useApiConfig() {
         console.warn(`[apiFetch] ${serviceName} 请求失败`, err)
         showToast(`网络异常: 访问接口 ${serviceName} 失败 (${err.message})`, 'error')
 
-        if (import.meta.dev) {
+        if (import.meta.dev || useMock) {
           console.warn(`[apiFetch] 允许 mock 兜底，降级使用本地数据`)
           return processResponse<T>(mockData, adaptFn, `[fallback] ${serviceName}`)
         }
