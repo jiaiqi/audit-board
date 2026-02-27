@@ -1,10 +1,10 @@
 import {
   mockAmountBarChart,
-  mockAmountRankChart,
+  mockAmountRankChart, // 本月成果金额排名TOP10
   mockCenterPieChart,
   mockCenterRingChart,
-  mockDevices,
-  mockLeftPieChart,
+  mockDevices, // 设备心跳
+  mockLeftPieChart, // 分公司本月成果占比
   mockQuantityRankChart,
   mockStats,
   mockTrendLineChart,
@@ -28,23 +28,23 @@ export interface InTransitHBarChartData { categories: string[], series: InTransi
 /** 统计卡片：单条对象 → 卡片数组 */
 function adaptStats(raw: any): InTransitStat[] {
   return [
-    { key: 'lastMonthCount', label: '上月在途成果数量', value: String(raw.diff_cnt_lm ?? '-'), icon: '/assets/icons/a.png' },
-    { key: 'lastMonthAmount', label: '上月在途成果金额', value: String(raw.diff_fee_lm_to ?? '-'), icon: '/assets/icons/b.png' },
-    { key: 'lastMonthPushCount', label: '上月推送成果数量', value: String(raw.stlh_cnt_lm ?? '-'), icon: '/assets/icons/c.png' },
-    { key: 'lastMonthPushAmount', label: '上月推送成果金额', value: String(raw.stlh_fee_lm ?? '-'), icon: '/assets/icons/d.png' },
-    { key: 'thisMonthCount', label: '本月在途成果数量', value: String(raw.diff_cnt_cm ?? '-'), icon: '/assets/icons/e.png' },
+    { key: 'lastMonthCount', label: '上月在途成果数量', value: String(raw.ztjh_cnt_lm ?? '-'), icon: '/assets/icons/a.png' },
+    { key: 'lastMonthAmount', label: '上月在途成果金额', value: String(raw.diff_fee_lm ?? '-'), icon: '/assets/icons/b.png' },
+    { key: 'lastMonthPushCount', label: '上月推送成果数量', value: String(raw.ztjh_cnt_lm_ts ?? '-'), icon: '/assets/icons/c.png' },
+    { key: 'lastMonthPushAmount', label: '上月推送成果金额', value: String(raw.diff_fee_lm_ts ?? '-'), icon: '/assets/icons/d.png' },
+    { key: 'thisMonthCount', label: '本月在途成果数量', value: String(raw.ztjh_cnt_cm ?? '-'), icon: '/assets/icons/e.png' },
     { key: 'thisMonthAmount', label: '本月在途成果金额', value: String(raw.diff_fee_cm ?? '-'), icon: '/assets/icons/f.png' },
   ]
 }
 
-/** 设备心跳 */
+/** 在途设备心跳监测 */
 function adaptDevices(raw: any[]): DeviceInfo[] {
   return raw.map(d => ({
     ip: d.ip_address,
-    cpu: d.sys_cpu_load,
-    memory: d.physical_total_memory,
-    disk: d.disk_usable_space,
-    usage: Number.parseFloat(d.sys_cpu_load) || 0,
+    cpu: d.system_cpu_load, // 系统CPU负载百分比
+    memory: d.physical_total_memory, // 总物理内存大小
+    disk: d.disk1_usable_space, // 磁盘可用空间
+    usage: Number.parseFloat(d.physical_memory_used_rate.replace('%', '')) || 0, // 物理内存使用率百分比
     time: d.update_time,
   }))
 }
@@ -84,16 +84,52 @@ function adaptDateSeries(seriesName: string, dateKey: string, valueKey: string) 
 export function useInTransitData() {
   const { apiFetch } = useApiConfig()
 
-  const { data: stats } = apiFetch('srvaud_laneexitdata_cnt_lm_cm_select', mockStats, adaptStats)
-  const { data: devices } = apiFetch('srvaud_laneexitdata_dev_status_select', mockDevices, adaptDevices)
-  const { data: leftPieChart } = apiFetch('srvaud_laneexitdata_amount_m_ratio_select', mockLeftPieChart, adaptPie('dept_name', 'diff_ratio_sts'))
-  const { data: amountRankChart } = apiFetch('srvaud_laneexitdata_amount_station_top10_select', mockAmountRankChart, adaptRank('成果金额', 'dept_name', 'diff_fee_disp'))
-  const { data: quantityRankChart } = apiFetch('srvaud_laneexitdata_cnt_station_top10_select', mockQuantityRankChart, adaptRank('成果数量', 'dept_name', 'stlh_cnt'))
-  const { data: centerPieChart } = apiFetch('srvaud_laneexitdata_cnt_m_ratio_select', mockCenterPieChart, adaptPie('dept_name', 'cnt_ratio_sts'))
-  const { data: centerRingChart } = apiFetch('srvaud_laneexitdata_type_ratio_select', mockCenterRingChart, adaptPie('type_name', 'diff_ratio_sts'))
-  const { data: vehiclePieChart } = apiFetch('srvaud_laneexitdata_vehicle_ratio_select', mockVehiclePieChart, adaptPie('exvehicletype', 'cnt_ratio_sts'))
-  const { data: trendLineChart } = apiFetch('srvaud_laneexitdata_cnt_date_select', mockTrendLineChart, adaptDateSeries('成果数量', 'statistic_date', 'diff_cnt'))
-  const { data: amountBarChart } = apiFetch('srvaud_laneexitdata_amount_date_select', mockAmountBarChart, adaptDateSeries('成果金额', 'statistic_date', 'diff_fee_disp'))
+  const { data: stats, pending: statsPending } = apiFetch('srvaud_laneexitdata_cnt_lm_cm_select', mockStats, adaptStats) // 统计卡片
+  const { data: devices, pending: devicesPending } = apiFetch('srvaud_laneexitdata_dev_status_select', mockDevices, adaptDevices)
+  const { data: leftPieChart, pending: leftPieChartPending } = apiFetch('srvaud_laneexitdata_amount_m_ratio_select', mockLeftPieChart, adaptPie('dept_name', 'dept_ratio_str')) // 分公司本月成果占比
+  const { data: amountRankChart, pending: amountRankChartPending } = apiFetch('srvaud_laneexitdata_amount_station_top10_select', mockAmountRankChart, adaptRank('成果金额', 'dept_name', 'diff_fee_disp')) // 本月成果金额排名TOP10
+  const { data: quantityRankChart, pending: quantityRankChartPending } = apiFetch('srvaud_laneexitdata_cnt_station_top10_select', mockQuantityRankChart, adaptRank('成果数量', 'dept_name', 'ztjh_cnt')) // 本月成果数量排名TOP10
+  const { data: centerPieChart, pending: centerPieChartPending } = apiFetch('srvaud_laneexitdata_cnt_m_ratio_select', mockCenterPieChart, adaptPie('dept_name', 'dept_ratio_str')) // 分公司本月成果数量占比
+  const { data: centerRingChart, pending: centerRingChartPending } = apiFetch('srvaud_laneexitdata_type_ratio_select', mockCenterRingChart, adaptPie('amount_type', 'dept_ratio_str')) // 成果类型金额占比
+  const { data: vehiclePieChart, pending: vehiclePieChartPending } = apiFetch('srvaud_laneexitdata_vehicle_ratio_select', mockVehiclePieChart, adaptPie('exvehicletype_str', 'dept_ratio_str')) // 车型占比
+  const { data: trendLineChart, pending: trendLineChartPending } = apiFetch('srvaud_laneexitdata_cnt_date_select', mockTrendLineChart, adaptDateSeries('成果数量', 'cnt_date', 'ztjh_cnt')) // 成果数量本月趋势
+  const { data: amountBarChart, pending: amountBarChartPending } = apiFetch('srvaud_laneexitdata_amount_date_select', mockAmountBarChart, adaptDateSeries('成果金额', 'cnt_date', 'diff_fee')) // 成果金额本月变化
 
-  return { stats, devices, leftPieChart, amountRankChart, quantityRankChart, centerPieChart, centerRingChart, vehiclePieChart, trendLineChart, amountBarChart }
+  const isLoading = computed(() =>
+    statsPending.value
+    || devicesPending.value
+    || leftPieChartPending.value
+    || amountRankChartPending.value
+    || quantityRankChartPending.value
+    || centerPieChartPending.value
+    || centerRingChartPending.value
+    || vehiclePieChartPending.value
+    || trendLineChartPending.value
+    || amountBarChartPending.value,
+  )
+
+  return {
+    stats,
+    devices,
+    leftPieChart,
+    amountRankChart,
+    quantityRankChart,
+    centerPieChart,
+    centerRingChart,
+    vehiclePieChart,
+    trendLineChart,
+    amountBarChart,
+    isLoading,
+    /* 导出单点 pending 以供 ECharts 使用 */
+    pendings: {
+      leftPieChart: leftPieChartPending,
+      amountRankChart: amountRankChartPending,
+      quantityRankChart: quantityRankChartPending,
+      centerPieChart: centerPieChartPending,
+      centerRingChart: centerRingChartPending,
+      vehiclePieChart: vehiclePieChartPending,
+      trendLineChart: trendLineChartPending,
+      amountBarChart: amountBarChartPending,
+    },
+  }
 }

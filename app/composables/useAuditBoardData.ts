@@ -33,13 +33,41 @@ export interface GroupBarChartData { categories: string[], series: AuditSeriesIt
 export function useAuditBoardData() {
   const { apiFetch } = useApiConfig()
 
-  const { data: stats } = apiFetch('srvaud_board_stats_select', mockStats)
-  const { data: barChart } = apiFetch('srvaud_board_company_recovery_rank_select', mockBarChart)
-  const { data: lineChart } = apiFetch('srvaud_board_recovery_amount_trend_select', mockLineChart)
-  const { data: pieChart } = apiFetch('srvaud_board_special_vehicle_stats_select', mockPieChart)
-  const { data: ringChart } = apiFetch('srvaud_board_workorder_indicator_select', mockRingChart)
-  const { data: trendLineChart } = apiFetch('srvaud_board_daily_recovery_trend_select', mockTrendLineChart)
-  const { data: groupBarChart } = apiFetch('srvaud_board_monthly_workorder_stats_select', mockGroupBarChart)
+  const { data: stats, pending: statsPending } = apiFetch('srvaud_board_stats_select', mockStats)
+  const { data: barChart, pending: barChartPending } = apiFetch('srvaud_board_company_recovery_rank_select', mockBarChart)
+  const { data: lineChart, pending: lineChartPending } = apiFetch('srvaud_board_recovery_amount_trend_select', mockLineChart)
+  const { data: pieChart, pending: pieChartPending } = apiFetch('srvaud_board_special_vehicle_stats_select', mockPieChart)
+  const { data: ringChart, pending: ringChartPending } = apiFetch('srvaud_board_workorder_indicator_select', mockRingChart)
+  const { data: trendLineChart, pending: trendLineChartPending } = apiFetch('srvaud_board_daily_recovery_trend_select', mockTrendLineChart)
+  const { data: groupBarChart, pending: groupBarChartPending } = apiFetch('srvaud_board_monthly_workorder_stats_select', mockGroupBarChart)
 
-  return { stats, barChart, lineChart, pieChart, ringChart, trendLineChart, groupBarChart }
+  const isLoading = computed(() =>
+    statsPending.value ||
+    barChartPending.value ||
+    lineChartPending.value ||
+    pieChartPending.value ||
+    ringChartPending.value ||
+    trendLineChartPending.value ||
+    groupBarChartPending.value,
+  )
+
+  return {
+    stats,
+    barChart,
+    lineChart,
+    pieChart,
+    ringChart,
+    trendLineChart,
+    groupBarChart,
+    isLoading,
+    /* 导出具体图表的 pending 以供图表单点 loading 使用 */
+    pendings: {
+      barChart: barChartPending,
+      lineChart: lineChartPending,
+      pieChart: pieChartPending,
+      ringChart: ringChartPending,
+      trendLineChart: trendLineChartPending,
+      groupBarChart: groupBarChartPending,
+    },
+  }
 }

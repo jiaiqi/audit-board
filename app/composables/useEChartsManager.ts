@@ -8,6 +8,8 @@ export interface ChartDescriptor<T = unknown> {
   domRef: Ref<HTMLElement | undefined>
   /** 接口数据来源（Ref 或 ComputedRef，数据就绪时自动触发 watch 更新） */
   dataRef: Ref<T | null> | ComputedRef<T | null>
+  /** 接口请求进行中状态（可选） */
+  pendingRef?: Ref<boolean>
   /** 根据接口数据构建 ECharts option 的函数 */
   buildOption: (data: T | null) => EChartsOption
 }
@@ -21,10 +23,11 @@ export interface ChartDescriptor<T = unknown> {
  *                    若不传入，则监听 window resize 事件作为兜底。
  *
  * 生命周期：
- *   1. onMounted → nextTick → 批量 init + setOption
- *   2. watch 各 dataRef → 数据就绪后 setOption
- *   3. useScreenScale.onScaled → resize（与缩放同步）
- *   4. onBeforeUnmount → 批量 dispose
+ *   1. onMounted → 初始化并建立实例
+ *   2. watch 各 dataRef → 数据就绪后 setOption 并触发 resize
+ *   3. watch 各 pendingRef → 控制 showLoading/hideLoading
+ *   4. useScreenScale.onScaled → resize（与缩放同步）
+ *   5. onBeforeUnmount → 批量 dispose
  */
 export function useEChartsManager(
   descriptors: ChartDescriptor<any>[],
@@ -34,23 +37,33 @@ export function useEChartsManager(
 
   /** 初始化所有图表实例 */
   async function initAll() {
-    for (let index = 0; index < descriptors.length; index++) {
-      const element = descriptors[index]
+    for (const [index, element] of descriptors.entries()) {
       if (!element?.domRef.value) {
-        return
+        continue
       }
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 不再使用硬编码的延时
       instances[index] = echarts.init(element.domRef.value)
-      instances[index]!.setOption(element.buildOption(element.dataRef.value))
+
+      // 初始加载状态处理
+      if (element.pendingRef?.value) {
+        instances[index]!.showLoading('default', {
+          text: '数据加载中...',
+          color: '#00f0ff',
+          textColor: '#fff',
+          maskColor: 'rgba(11, 17, 26, 0.8)', // 匹配深色看板风格
+          zlevel: 0,
+        })
+      }
+      else {
+        instances[index]!.setOption(element.buildOption(element.dataRef.value))
+      }
     }
   }
 
   /** 批量 resize */
   async function resizeAll() {
-    for (let index = 0; index < instances.length; index++) {
-      const element = instances[index]
+    for (const element of instances) {
       if (element) {
-        await new Promise(resolve => setTimeout(resolve, 100))
         element.resize()
       }
     }
@@ -63,14 +76,41 @@ export function useEChartsManager(
 
   // 各图表独立 watch 数据源，数据就绪后立即更新
   descriptors.forEach((desc, i) => {
+    // 监听数据改变
     watch(desc.dataRef, (data) => {
-      instances[i]?.setOption(desc.buildOption(data))
+      const inst = instances[i]
+      if (inst) {
+        inst.setOption(desc.buildOption(data))
+        // 图表数据更新后自动 resize 确保布局适应内容
+        nextTick(() => inst.resize())
+      }
     })
+
+    // 监听 pending 状态改变
+    if (desc.pendingRef) {
+      watch(desc.pendingRef, (isPending) => {
+        const inst = instances[i]
+        if (inst) {
+          if (isPending) {
+            inst.showLoading('default', {
+              text: '数据加载中...',
+              color: '#00f0ff',
+              textColor: '#a3a6ad',
+              maskColor: 'rgba(11, 17, 26, 0.6)',
+              zlevel: 0,
+            })
+          }
+          else {
+            inst.hideLoading()
+          }
+        }
+      })
+    }
   })
 
   onMounted(async () => {
     await nextTick()
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 之前有个延时 1000ms 的硬编码已移除，如果在特殊生命周期存在渲染不足，通过组件封装的外部控制更好
     initAll()
     if (onScaled) {
       // 优先：缩放完成（DOM 更新后）再 resize，与屏幕缩放精确同步

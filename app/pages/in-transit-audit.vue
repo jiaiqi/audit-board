@@ -31,6 +31,8 @@ const {
   vehiclePieChart,
   trendLineChart,
   amountBarChart,
+  isLoading,
+  pendings,
 } = useInTransitData()
 
 // ── 图表容器 ref ─────────────────────────────────
@@ -152,14 +154,14 @@ function buildAmountBar(c: InTransitHBarChartData | null): EChartsOption {
 
 // ── ECharts 生命周期管理 ─────────────────────────────
 useEChartsManager([
-  { domRef: leftPieRef, dataRef: leftPieChart, buildOption: buildRosePie },
-  { domRef: amountRankRef, dataRef: amountRankChart, buildOption: c => buildHBar(c, true) },
-  { domRef: quantityRankRef, dataRef: quantityRankChart, buildOption: c => buildHBar(c, false) },
-  { domRef: centerPieRef, dataRef: centerPieChart, buildOption: buildRosePie },
-  { domRef: centerRingRef, dataRef: centerRingChart, buildOption: buildRingPie },
-  { domRef: vehiclePieRef, dataRef: vehiclePieChart, buildOption: buildRosePie },
-  { domRef: trendLineRef, dataRef: trendLineChart, buildOption: buildTrendLine },
-  { domRef: amountBarRef, dataRef: amountBarChart, buildOption: buildAmountBar },
+  { domRef: leftPieRef, dataRef: leftPieChart, pendingRef: pendings.leftPieChart, buildOption: buildRosePie },
+  { domRef: amountRankRef, dataRef: amountRankChart, pendingRef: pendings.amountRankChart, buildOption: c => buildHBar(c, true) },
+  { domRef: quantityRankRef, dataRef: quantityRankChart, pendingRef: pendings.quantityRankChart, buildOption: c => buildHBar(c, false) },
+  { domRef: centerPieRef, dataRef: centerPieChart, pendingRef: pendings.centerPieChart, buildOption: buildRosePie },
+  { domRef: centerRingRef, dataRef: centerRingChart, pendingRef: pendings.centerRingChart, buildOption: buildRingPie },
+  { domRef: vehiclePieRef, dataRef: vehiclePieChart, pendingRef: pendings.vehiclePieChart, buildOption: buildRosePie },
+  { domRef: trendLineRef, dataRef: trendLineChart, pendingRef: pendings.trendLineChart, buildOption: buildTrendLine },
+  { domRef: amountBarRef, dataRef: amountBarChart, pendingRef: pendings.amountBarChart, buildOption: buildAmountBar },
 ], onScaled)
 </script>
 
@@ -199,8 +201,11 @@ useEChartsManager([
         <!-- 中列 -->
         <div class="center-col">
           <!-- 统计卡片 -->
-          <div class="stat-grid">
-            <div v-for="(card, i) in stats" :key="i" class="stat-card">
+          <div class="stat-grid relative">
+            <div v-if="isLoading" class="panel-loading-overlay" style="border-radius: 8px;">
+              <div class="loading-spinner" />
+            </div>
+            <div v-for="(card, i) in (stats as any[])" :key="i" class="stat-card">
               <div class="stat-inner">
                 <div class="stat-text">
                   <div class="stat-value">
@@ -220,7 +225,10 @@ useEChartsManager([
             <div class="panel-hd">
               <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">在途设备心跳监测</span>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap relative">
+              <div v-if="isLoading" class="panel-loading-overlay">
+                <div class="loading-spinner" />
+              </div>
               <table class="data-table">
                 <thead>
                   <tr>
@@ -229,7 +237,7 @@ useEChartsManager([
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(row, i) in devices" :key="i">
+                  <tr v-for="(row, i) in (devices as any[])" :key="i">
                     <td>{{ row.ip }}</td>
                     <td>{{ row.cpu }}</td>
                     <td>{{ row.memory }}</td>
@@ -398,6 +406,7 @@ useEChartsManager([
 }
 .panel-title.bg {
   background-image: url('/assets/images/page2_block_title_bg.png');
+  background-size: cover;
 }
 .p-icon {
   display: inline-block;
@@ -431,6 +440,7 @@ useEChartsManager([
   display: flex;
   align-items: center;
   flex-direction: row-reverse;
+  justify-content: flex-end;
   gap: 20px;
   height: 100%;
   padding: 8px 12px;
@@ -449,7 +459,7 @@ useEChartsManager([
   line-height: 1.1;
 }
 .stat-label {
-  font-size: 16px;
+  font-size: 14px;
   color: #fff;
   line-height: 1.3;
   margin-top: 5px;

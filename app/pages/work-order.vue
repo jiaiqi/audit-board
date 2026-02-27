@@ -16,7 +16,17 @@ definePageMeta({ layout: 'audit' })
 useHead({ title: '交控稽核工单大数据看板' })
 
 const { screenRef, onScaled } = useScreenScale({ width: 1920, height: 1080 })
-const { stats, barChart, lineChart, pieChart, ringChart, trendLineChart, groupBarChart } = useAuditBoardData()
+const {
+  stats,
+  barChart,
+  lineChart,
+  pieChart,
+  ringChart,
+  trendLineChart,
+  groupBarChart,
+  isLoading,
+  pendings,
+} = useAuditBoardData()
 
 // ── 图表容器 ref ─────────────────────────────────
 const barRef = ref<HTMLElement>()
@@ -162,22 +172,22 @@ function buildGroupBar(c: GroupBarChartData | null): EChartsOption {
 
 // ── 环形图中心文字 ─────────────────────────────────
 const ringPercent = computed(() => {
-  const v = ringChart.value?.value ?? 0
-  const t = ringChart.value?.total ?? 100
+  const v = (ringChart.value as any)?.value ?? 0
+  const t = (ringChart.value as any)?.total ?? 100
   return `${Math.round(v / t * 100)}%`
 })
-const ringCenterLabel = computed(() => ringChart.value?.label ?? '处理率')
-const ringCenterValue = computed(() => ringChart.value?.center?.value ?? 0)
-const ringCenterTitle = computed(() => ringChart.value?.center?.label ?? '本月处理工单')
+const ringCenterLabel = computed(() => (ringChart.value as any)?.label ?? '处理率')
+const ringCenterValue = computed(() => (ringChart.value as any)?.center?.value ?? 0)
+const ringCenterTitle = computed(() => (ringChart.value as any)?.center?.label ?? '本月处理工单')
 
 // ── ECharts 生命周期管理 ─────────────────────────────
 useEChartsManager([
-  { domRef: barRef, dataRef: barChart, buildOption: buildBar },
-  { domRef: lineRef, dataRef: lineChart, buildOption: buildLine },
-  { domRef: pieRef, dataRef: pieChart, buildOption: buildPie },
-  { domRef: ringRef, dataRef: ringChart, buildOption: buildRing },
-  { domRef: trendLineRef, dataRef: trendLineChart, buildOption: buildTrendLine },
-  { domRef: groupBarRef, dataRef: groupBarChart, buildOption: buildGroupBar },
+  { domRef: barRef, dataRef: barChart, pendingRef: pendings.barChart, buildOption: buildBar },
+  { domRef: lineRef, dataRef: lineChart, pendingRef: pendings.lineChart, buildOption: buildLine },
+  { domRef: pieRef, dataRef: pieChart, pendingRef: pendings.pieChart, buildOption: buildPie },
+  { domRef: ringRef, dataRef: ringChart, pendingRef: pendings.ringChart, buildOption: buildRing },
+  { domRef: trendLineRef, dataRef: trendLineChart, pendingRef: pendings.trendLineChart, buildOption: buildTrendLine },
+  { domRef: groupBarRef, dataRef: groupBarChart, pendingRef: pendings.groupBarChart, buildOption: buildGroupBar },
 ], onScaled)
 </script>
 
@@ -189,8 +199,11 @@ useEChartsManager([
 
       <div class="main-content">
         <!-- 统计卡片 -->
-        <div class="stat-row">
-          <div v-for="(item, i) in stats" :key="item.key" class="top-block">
+        <div class="stat-row relative">
+          <div v-if="isLoading" class="panel-loading-overlay">
+            <div class="loading-spinner" />
+          </div>
+          <div v-for="(item, i) in (stats as any[])" :key="item.key" class="top-block">
             <div class="top-block__inner">
               <div class="top-block__text">
                 <div class="top-block__label">
