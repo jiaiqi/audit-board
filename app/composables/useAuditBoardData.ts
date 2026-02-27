@@ -22,6 +22,74 @@ export interface TrendLineChartData { categories: string[], series: AuditSeriesI
 export interface GroupBarChartData { categories: string[], series: AuditSeriesItem[] }
 
 // ─────────────────────────────────────
+// 适配器函数 (后端数据 -> 前端格式)
+// ─────────────────────────────────────
+
+function adaptStats(raw: any): AuditBoardStat[] {
+  // raw 可能是一个对象数组，取第一条
+  const data = Array.isArray(raw) ? raw[0] : raw
+  return [
+    { key: 'monthInitiated', label: '本月发起工单', value: data?.cnt_cm_fq ?? 0, unit: '个' },
+    { key: 'monthRecovery', label: '本月追缴工单', value: data?.cnt_cm_zj ?? 0, unit: '个' },
+    { key: 'monthAmount', label: '本月追缴金额', value: data?.amount_cm_zj ?? 0, unit: '元' },
+    { key: 'lastMonthAmount', label: '上月追缴金额', value: data?.amount_lm_zj ?? 0, unit: '元' },
+  ]
+}
+
+function adaptBarChart(raw: any[]): BarChartData {
+  return {
+    categories: raw.map(d => d.org_name),
+    series: [{ name: '追缴金额', data: raw.map(d => Number(d.cnt_fee)) }],
+  }
+}
+
+function adaptLineChart(raw: any[]): LineChartData {
+  return {
+    categories: raw.map(d => d.year_month),
+    series: [{ name: '追缴金额', data: raw.map(d => Number(d.total_payback)) }],
+  }
+}
+
+function adaptPieChart(raw: any[]): PieChartData {
+  return {
+    data: raw.map(d => ({ name: d.s_type, value: Number(d.type_cnt) })),
+  }
+}
+
+function adaptRingChart(raw: any[]): RingChartData {
+  const data = Array.isArray(raw) ? raw[0] : raw
+  const total = Number(data?.issue_total || 0)
+  const proStr = data?.issue_pro_str || '0%'
+  const percent = Number.parseFloat(proStr.replace('%', ''))
+  // 此处特意返回饼图实际两块比例的数据（以便环形图分为已处理和未处理两截）
+  // 虽然返回值与旧版稍微不同，但业务上更符合环形图需求
+  return {
+    value: percent,
+    total: 100, // ECharts可以直接用这两个比例作为数据
+    label: '处理率',
+    center: { label: '本月特情工单', value: total },
+  }
+}
+
+function adaptTrendLineChart(raw: any[]): TrendLineChartData {
+  return {
+    categories: raw.map(d => d.day_of_month),
+    series: [{ name: '追缴金额', data: raw.map(d => Number(d.total_payback)) }],
+  }
+}
+
+function adaptGroupBarChart(raw: any[]): GroupBarChartData {
+  return {
+    categories: raw.map(d => d.year_month),
+    series: [
+      { name: '发起工单', data: raw.map(d => Number(d.cnt_fq)) },
+      { name: '追缴工单', data: raw.map(d => Number(d.cnt_zj)) },
+      { name: '处理工单', data: raw.map(d => Number(d.cnt_cl)) },
+    ],
+  }
+}
+
+// ─────────────────────────────────────
 // Composable
 // ─────────────────────────────────────
 
@@ -33,13 +101,13 @@ export interface GroupBarChartData { categories: string[], series: AuditSeriesIt
 export function useAuditBoardData() {
   const { apiFetch } = useApiConfig()
 
-  const { data: stats, pending: statsPending } = apiFetch('srvaud_board_stats_select', mockStats)
-  const { data: barChart, pending: barChartPending } = apiFetch('srvaud_board_company_recovery_rank_select', mockBarChart)
-  const { data: lineChart, pending: lineChartPending } = apiFetch('srvaud_board_recovery_amount_trend_select', mockLineChart)
-  const { data: pieChart, pending: pieChartPending } = apiFetch('srvaud_board_special_vehicle_stats_select', mockPieChart)
-  const { data: ringChart, pending: ringChartPending } = apiFetch('srvaud_board_workorder_indicator_select', mockRingChart)
-  const { data: trendLineChart, pending: trendLineChartPending } = apiFetch('srvaud_board_daily_recovery_trend_select', mockTrendLineChart)
-  const { data: groupBarChart, pending: groupBarChartPending } = apiFetch('srvaud_board_monthly_workorder_stats_select', mockGroupBarChart)
+  const { data: stats, pending: statsPending } = apiFetch('srvaud_workorder_cnt_cmlm_select', mockStats, adaptStats)
+  const { data: barChart, pending: barChartPending } = apiFetch('srvaud_workorder_amount_organ_select', mockBarChart, adaptBarChart)
+  const { data: lineChart, pending: lineChartPending } = apiFetch('srvaud_workorder_amount_ym_select', mockLineChart, adaptLineChart)
+  const { data: pieChart, pending: pieChartPending } = apiFetch('srvaud_workorder_cnt_tq_select', mockPieChart, adaptPieChart)
+  const { data: ringChart, pending: ringChartPending } = apiFetch('srvaud_workorder_cnt_cm_cl_select', mockRingChart, adaptRingChart)
+  const { data: trendLineChart, pending: trendLineChartPending } = apiFetch('srvaud_workorder_amount_lm_zjd_select', mockTrendLineChart, adaptTrendLineChart)
+  const { data: groupBarChart, pending: groupBarChartPending } = apiFetch('srvaud_workorder_cnt_ym_select', mockGroupBarChart, adaptGroupBarChart)
 
   const isLoadingRaw = computed(() =>
     statsPending.value

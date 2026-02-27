@@ -30,6 +30,7 @@
     "@vite-pwa/nuxt": "catalog:build",
     "@vueuse/core": "catalog:frontend",
     "@vueuse/nuxt": "catalog:build",
+    "dayjs": "catalog:frontend",
     "echarts": "catalog:frontend",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
@@ -46,8 +47,5 @@
     "nuxt": "catalog:build",
     "unplugin": "catalog:build",
     "vite": "catalog:build"
-  },
-  "dependencies": {
-    "dayjs": "^1.11.19"
   }
 }

@@ -213,9 +213,8 @@ useEChartsManager([
                   <BoardCountUp
                     :value="item.value"
                     :use-grouping="true"
-                    :decimals="String(item.value).includes('.') ? String(item.value).split('.')[1].length : 0"
+                    :suffix="item.unit"
                   />
-                  <span v-if="item.unit" class="top-block__unit">{{ item.unit }}</span>
                 </div>
               </div>
               <img :src="`/assets/icons/0${i + 1}.png`" alt="" class="top-block__icon">
@@ -273,7 +272,6 @@ useEChartsManager([
                       <BoardCountUp
                         :value="ringCenterValue"
                         :use-grouping="true"
-                        :decimals="String(ringCenterValue).includes('.') ? String(ringCenterValue).split('.')[1].length : 0"
                       />
                     </div>
                   </div>

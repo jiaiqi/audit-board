@@ -16,16 +16,23 @@ const props = withDefaults(defineProps<{
   prefix?: string
   /** 数值后缀（如 %、元） */
   suffix?: string
+  /** 是否开启大数自动转换（万、亿），默认开启 */
+  autoUnit?: boolean
+  /** 是否移除小数末尾的零（例如 10.00 -> 10，10.50 -> 10.5），默认开启 */
+  trimTrailingZeros?: boolean
 }>(), {
   duration: 1500,
-  decimals: 0,
+  decimals: 2,
   useGrouping: false,
   useEasing: true,
   prefix: '',
   suffix: '',
+  autoUnit: true,
+  trimTrailingZeros: true,
 })
 
 const displayValue = ref('')
+const currentAutoUnit = ref('')
 let animationFrameId: number
 
 // easeOutExpo 缓动函数：具有强烈的阻尼感，开始很快，最后很慢
@@ -35,7 +42,12 @@ function easeOutExpo(t: number, b: number, c: number, d: number): number {
 
 // 格式化数字
 function formatNumber(num: number): string {
-  const fixedNum = num.toFixed(props.decimals)
+  let fixedNum = num.toFixed(props.decimals ?? 2)
+
+  if (props.trimTrailingZeros) {
+    fixedNum = String(Number.parseFloat(fixedNum))
+  }
+
   let result = fixedNum
 
   if (props.useGrouping) {
@@ -44,12 +56,27 @@ function formatNumber(num: number): string {
     result = parts.join('.')
   }
 
-  return `${props.prefix}${result}${props.suffix}`
+  return `${props.prefix ?? ''}${result}`
 }
 
-function startAnimation(targetNumber: number) {
+function startAnimation(originalTarget: number) {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId)
+  }
+
+  let targetNumber = originalTarget
+  currentAutoUnit.value = ''
+
+  if (props.autoUnit) {
+    const absNum = Math.abs(originalTarget)
+    if (absNum >= 100000000) {
+      targetNumber = originalTarget / 100000000
+      currentAutoUnit.value = '亿'
+    }
+    else if (absNum >= 10000) {
+      targetNumber = originalTarget / 10000
+      currentAutoUnit.value = '万'
+    }
   }
 
   const startTime = Date.now()
@@ -103,5 +130,18 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <span>{{ displayValue }}</span>
+  <span class="board-count-up">
+    {{ displayValue }}<span v-if="currentAutoUnit || suffix" class="board-count-up__unit">{{ currentAutoUnit }}{{ suffix }}</span>
+  </span>
 </template>
+
+<style scoped>
+.board-count-up {
+  display: inline-flex;
+  align-items: baseline;
+}
+.board-count-up__unit {
+  font-size: 0.5em; /* 单位比数字小一半 */
+  margin-left: 2px;
+}
+</style>

@@ -213,7 +213,7 @@ useEChartsManager([
                     <BoardCountUp
                       :value="card?.value"
                       :use-grouping="true"
-                      :decimals="String(card?.value || '').includes('.') ? (String(card?.value || '').split('.')[1]?.length ?? 0) : 0"
+                      :suffix="card?.unit"
                     />
                   </div>
                   <div class="stat-label">

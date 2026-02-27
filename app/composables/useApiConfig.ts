@@ -15,6 +15,71 @@ import { $fetch as rawFetch } from 'ofetch'
  *   1. window.__APP_CONFIG__.apiTimeout
  *   2. nuxt.config runtimeConfig.public.apiTimeout（默认 5000ms）
  */
+
+/**
+ * 原生全局轻提示工具，不依赖第三方 UI 库，支持多实例错开排列
+ */
+const activeToasts: HTMLElement[] = []
+
+function showToast(message: string, type: 'error' | 'warning' = 'error') {
+  if (!import.meta.client)
+    return
+
+  const el = document.createElement('div')
+  el.textContent = message
+
+  // 基础偏移与每个 Toast 占据的高度阈值
+  const baseTop = 20
+  const gap = 16
+  const toastHeight = 40 // 预估平均高度
+  const currentTop = baseTop + activeToasts.length * (toastHeight + gap)
+
+  Object.assign(el.style, {
+    position: 'fixed',
+    top: `${currentTop}px`,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: type === 'error' ? 'rgba(255, 77, 79, 0.9)' : 'rgba(250, 173, 20, 0.9)',
+    color: '#fff',
+    padding: '10px 20px',
+    borderRadius: '4px',
+    zIndex: '9999',
+    fontSize: '14px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    transition: 'all 0.3s ease-in-out',
+    opacity: '0', // 初始透明度用于实现淡入
+  })
+
+  document.body.appendChild(el)
+  activeToasts.push(el)
+
+  // 触发淡入动画
+  requestAnimationFrame(() => {
+    el.style.opacity = '1'
+  })
+
+  // 定时移除
+  setTimeout(() => {
+    el.style.opacity = '0'
+    el.style.transform = 'translate(-50%, -20px)'
+
+    // 从活动列表中移除
+    const index = activeToasts.indexOf(el)
+    if (index > -1) {
+      activeToasts.splice(index, 1)
+    }
+
+    // 重新计算剩余 Toast 的位置并触发上移动画
+    activeToasts.forEach((toastEl, i) => {
+      const newTop = baseTop + i * (toastHeight + gap)
+      toastEl.style.top = `${newTop}px`
+    })
+
+    // 等待淡出动画结束后卸载 DOM
+    setTimeout(() => el.remove(), 300)
+  }, 4000)
+}
+
 export function useApiConfig() {
   const { public: { useMock, apiBase: configApiBase, apiTimeout: configTimeout } } = useRuntimeConfig()
 
@@ -57,8 +122,15 @@ export function useApiConfig() {
   function processResponse<T>(raw: { state: string, data: any }, adaptFn?: (d: any) => T, label = ''): T | null {
     if (raw?.state !== 'SUCCESS') {
       console.warn(`[apiFetch] ${label} state=${raw?.state}，跳过`)
+      showToast(`接口请求失败(${label}): 状态异常 [${raw?.state}]`, 'error')
       return null
     }
+
+    // 检查 data 无值或空数组
+    if (raw.data === null || raw.data === undefined || (Array.isArray(raw.data) && raw.data.length === 0)) {
+      showToast(`空数据提示(${label}): 接口请求成功但返回了空内容/空数组`, 'warning')
+    }
+
     return adaptFn ? adaptFn(raw.data) : (raw.data as T)
   }
 
@@ -67,6 +139,8 @@ export function useApiConfig() {
    *
    * @param serviceName - 真实后端服务名
    * @param mockData    - 本地兜底数据，格式与真实接口返回完全一致（含 state/data 字段）
+   * @param mockData.state - 本地兜底数据的状态码
+   * @param mockData.data - 本地兜底数据的载荷
    * @param adaptFn     - 可选，将接口 data 字段转换为前端格式（mock 和真实接口均会执行）
    *
    * 返回 useAsyncData 结果，.data 为 Ref<T | null>
@@ -76,7 +150,7 @@ export function useApiConfig() {
     mockData: { state: string, data: any, [k: string]: any },
     adaptFn?: (rawData: any) => T,
   ) {
-    if (useMock) {
+    if (useMock && import.meta.dev) {
       return useAsyncData<T | null>(serviceName, () =>
         Promise.resolve(processResponse<T>(mockData, adaptFn, `[mock] ${serviceName}`)))
     }
@@ -97,9 +171,15 @@ export function useApiConfig() {
         })
         return processResponse<T>(raw, adaptFn, serviceName)
       }
-      catch (err) {
-        console.warn(`[apiFetch] ${serviceName} 请求失败，降级使用本地数据`, err)
-        return processResponse<T>(mockData, adaptFn, `[fallback] ${serviceName}`)
+      catch (err: any) {
+        console.warn(`[apiFetch] ${serviceName} 请求失败`, err)
+        showToast(`网络异常: 访问接口 ${serviceName} 失败 (${err.message})`, 'error')
+
+        if (import.meta.dev) {
+          console.warn(`[apiFetch] 允许 mock 兜底，降级使用本地数据`)
+          return processResponse<T>(mockData, adaptFn, `[fallback] ${serviceName}`)
+        }
+        return null
       }
     })
   }
