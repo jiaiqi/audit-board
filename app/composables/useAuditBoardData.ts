@@ -46,7 +46,7 @@ function adaptBarChart(raw: any[]): BarChartData {
 function adaptLineChart(raw: any[]): LineChartData {
   return {
     categories: raw.map(d => d.year_month),
-    series: [{ name: '追缴金额', data: raw.map(d => Number(d.total_payback)) }],
+    series: [{ name: '追缴金额', data: raw.map(d => Number(d.cnt_zj)) }],
   }
 }
 
