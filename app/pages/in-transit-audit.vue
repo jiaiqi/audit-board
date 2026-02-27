@@ -221,40 +221,38 @@ useEChartsManager([
           </div>
 
           <!-- 设备心跳监测 -->
-          <div class="panel p-0" style="flex: 1;">
-            <div class="panel-hd">
+          <div class="panel p-0 flex flex-col overflow-hidden" style="flex: 1;">
+            <div class="panel-hd shrink-0">
               <img class="p-icon" src="/assets/icons/arrow-icon.png" alt=""><span class="p-title">在途设备心跳监测</span>
             </div>
-            <div class="table-wrap relative">
-              <div v-if="isLoading" class="panel-loading-overlay">
-                <div class="loading-spinner" />
-              </div>
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>IP</th><th>系统CPU负载百分比</th><th>总物理内存大小</th>
-                    <th>磁盘可用空间</th><th>物理内存使用率百分比</th><th>更新时间</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(row, i) in (devices as any[])" :key="i">
-                    <td>{{ row.ip }}</td>
-                    <td>{{ row.cpu }}</td>
-                    <td>{{ row.memory }}</td>
-                    <td>{{ row.disk }}</td>
-                    <td>
-                      <div class="prog-row">
-                        <div class="prog-bar">
-                          <div class="prog-fill" :style="{ '--width': `${row.usage}%` }" />
-                        </div>
-                        <span class="prog-text">{{ row.usage }}%</span>
-                      </div>
-                    </td>
-                    <td>{{ row.time }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+
+            <BoardScrollTable
+              class="flex-1"
+              style="margin: 0px 10px 10px;"
+              :data="devices || []"
+              :is-loading="isLoading"
+              scroll-mode="step"
+              :step-rows="1"
+              :step-delay="2"
+              :step-duration="0.5"
+              :columns="[
+                { title: 'IP', key: 'ip', width: '15%' },
+                { title: '系统CPU负载百分比', key: 'cpu', width: '16%' },
+                { title: '总物理内存大小', key: 'memory', width: '15%' },
+                { title: '磁盘可用空间', key: 'disk', width: '15%' },
+                { title: '物理内存使用率百分比', key: 'usage', width: '20%' },
+                { title: '更新时间', key: 'time', width: '19%' },
+              ]"
+            >
+              <template #usage="{ row }">
+                <div class="prog-row">
+                  <div class="prog-bar">
+                    <div class="prog-fill" :style="{ '--width': `${row.usage}%` }" />
+                  </div>
+                  <span class="prog-text">{{ row.usage }}%</span>
+                </div>
+              </template>
+            </BoardScrollTable>
           </div>
 
           <!-- 两个饼图 -->
@@ -488,42 +486,6 @@ useEChartsManager([
   min-height: 0;
 }
 
-/* ══════════════ 数据表格 ══════════════ */
-.table-wrap {
-  flex: 1;
-  overflow: auto;
-  min-height: 0;
-}
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-}
-.data-table th,
-.data-table td {
-  padding: 6px 10px;
-  text-align: left;
-  color: #fff;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.1);
-  white-space: nowrap;
-  height: 40px;
-}
-.data-table th {
-  font-weight: normal;
-  color: rgb(208, 222, 238);
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-  background: linear-gradient(180.03deg, rgba(0, 111, 255, 0) -71.13%, rgba(51, 99, 161, 0.4) 99.97%);
-}
-.data-table tr:hover td {
-  background: rgba(0, 240, 255, 0.04);
-}
-.data-table tr:nth-child(even) td {
-  background: rgba(99, 129, 234, 0.1);
-}
-.data-table tr:last-child td {
-  border-bottom: none;
-}
-
 /* ══════════════ 进度条 ══════════════ */
 .prog-row {
   display: flex;
@@ -554,6 +516,14 @@ useEChartsManager([
   }
   to {
     transform: scaleX(1);
+  }
+}
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 .prog-fill::after {
