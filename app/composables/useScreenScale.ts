@@ -43,7 +43,6 @@ export function useScreenScale(options: {
 
     // 等待 DOM 渲染完成后再通知图表 resize
     await nextTick()
-    await new Promise(resolve => setTimeout(resolve, 500))
     scaledCallbacks.forEach(cb => cb())
   }
 

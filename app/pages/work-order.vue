@@ -98,7 +98,7 @@ function buildPie(c: PieChartData | null): EChartsOption {
     legend: { show: false },
     series: [{
       name: '特殊车型',
-      roseType: 'area',
+      roseType: 'radius',
       type: 'pie',
       radius: ['20%', '70%'],
       center: ['50%', '50%'],
@@ -199,7 +199,7 @@ useEChartsManager([
 
       <div class="main-content">
         <!-- 统计卡片 -->
-        <div class="stat-row relative">
+        <div class="stat-row h-181px relative">
           <div v-if="isLoading" class="panel-loading-overlay">
             <div class="loading-spinner" />
           </div>
@@ -210,7 +210,11 @@ useEChartsManager([
                   {{ item.label }}
                 </div>
                 <div class="top-block__value">
-                  {{ item.value }}
+                  <BoardCountUp
+                    :value="item.value"
+                    :use-grouping="true"
+                    :decimals="String(item.value).includes('.') ? String(item.value).split('.')[1].length : 0"
+                  />
                   <span v-if="item.unit" class="top-block__unit">{{ item.unit }}</span>
                 </div>
               </div>
@@ -265,8 +269,12 @@ useEChartsManager([
                     <div class="ring-row__label">
                       {{ ringCenterTitle }}
                     </div>
-                    <div class="ring-row__value">
-                      {{ ringCenterValue }}
+                    <div class="ring-row__value" style="font-family: PangMenZhengDao, sans-serif;">
+                      <BoardCountUp
+                        :value="ringCenterValue"
+                        :use-grouping="true"
+                        :decimals="String(ringCenterValue).includes('.') ? String(ringCenterValue).split('.')[1].length : 0"
+                      />
                     </div>
                   </div>
                 </div>
@@ -391,7 +399,6 @@ useEChartsManager([
   border: 1px solid rgba(0, 240, 255, 0.3);
   position: relative;
   height: 100%;
-  overflow: hidden;
 }
 .chart-block--compact {
   padding-top: 10px;
@@ -532,6 +539,34 @@ useEChartsManager([
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(1, 31, 31, 0.5);
-  border-radius: 4px;
+}
+
+/* ══════════════ Loading 遮罩层 ══════════════ */
+.panel-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(11, 17, 26, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  border-radius: inherit;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0, 240, 255, 0.2);
+  border-top-color: #00f0ff;
+  border-radius: 50%;
+  animation: spinner-rotate 1s linear infinite;
+}
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

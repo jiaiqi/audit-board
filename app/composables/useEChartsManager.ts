@@ -35,6 +35,13 @@ export function useEChartsManager(
 ) {
   const instances: (echarts.ECharts | null)[] = descriptors.map(() => null)
 
+  // 用于避开页面级的 .page-enter-active 动画 (通常 0.6s 左右)
+  // 以免图表动画在页面透明度或平移期间已经播放完毕
+  const minEnterDelay = 600
+  const mountTime = Date.now()
+  const isFirstDataRender = descriptors.map(() => true)
+  const isFirstHideLoading = descriptors.map(() => true)
+
   /** 初始化所有图表实例 */
   async function initAll() {
     for (const [index, element] of descriptors.entries()) {
@@ -54,8 +61,13 @@ export function useEChartsManager(
           zlevel: 0,
         })
       }
-      else {
-        instances[index]!.setOption(element.buildOption(element.dataRef.value))
+      else if (element.dataRef.value) {
+        isFirstDataRender[index] = false
+        isFirstHideLoading[index] = false
+        // 本地数据或 SSR 已经有数据，直接做延时渲染避免动画失效
+        setTimeout(() => {
+          instances[index]!.setOption(element.buildOption(element.dataRef.value))
+        }, minEnterDelay)
       }
     }
   }
@@ -80,9 +92,28 @@ export function useEChartsManager(
     watch(desc.dataRef, (data) => {
       const inst = instances[i]
       if (inst) {
-        inst.setOption(desc.buildOption(data))
-        // 图表数据更新后自动 resize 确保布局适应内容
-        nextTick(() => inst.resize())
+        const doSetOption = (isFirst: boolean) => {
+          if (isFirst) {
+            inst.clear()
+          }
+          // 强制开启动画并放入 setOption
+          inst.setOption(desc.buildOption(data), { notMerge: isFirst })
+          // 注意：切勿在此处调用 inst.resize()，每次 setOption 紧接着使用 resize() 会强制截断 ECharts 的初始入场动画！
+        }
+
+        if (isFirstDataRender[i]) {
+          isFirstDataRender[i] = false
+          const delay = Math.max(0, minEnterDelay - (Date.now() - mountTime))
+          if (delay > 0) {
+            setTimeout(() => doSetOption(true), delay)
+          }
+          else {
+            doSetOption(true)
+          }
+        }
+        else {
+          doSetOption(false)
+        }
       }
     })
 
@@ -101,7 +132,19 @@ export function useEChartsManager(
             })
           }
           else {
-            inst.hideLoading()
+            if (isFirstHideLoading[i]) {
+              isFirstHideLoading[i] = false
+              const delay = Math.max(0, minEnterDelay - (Date.now() - mountTime))
+              if (delay > 0) {
+                setTimeout(() => inst.hideLoading(), delay)
+              }
+              else {
+                inst.hideLoading()
+              }
+            }
+            else {
+              inst.hideLoading()
+            }
           }
         }
       })
@@ -110,14 +153,13 @@ export function useEChartsManager(
 
   onMounted(async () => {
     await nextTick()
-    // 之前有个延时 1000ms 的硬编码已移除，如果在特殊生命周期存在渲染不足，通过组件封装的外部控制更好
     initAll()
     if (onScaled) {
-      // 优先：缩放完成（DOM 更新后）再 resize，与屏幕缩放精确同步
+      // 缩放完成（DOM 更新后）再 resize，与屏幕缩放精确同步
       onScaled(resizeAll)
     }
     else {
-      // 兜底：直接监听 window resize（未使用 useScreenScale 的场景）
+      // 直接监听 window resize（未使用 useScreenScale 的场景）
       useEventListener(window, 'resize', resizeAll)
     }
   })

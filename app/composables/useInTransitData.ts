@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import {
   mockAmountBarChart,
   mockAmountRankChart, // 本月成果金额排名TOP10
@@ -45,7 +46,7 @@ function adaptDevices(raw: any[]): DeviceInfo[] {
     memory: d.physical_total_memory, // 总物理内存大小
     disk: d.disk1_usable_space, // 磁盘可用空间
     usage: Number.parseFloat(d.physical_memory_used_rate.replace('%', '')) || 0, // 物理内存使用率百分比
-    time: d.update_time,
+    time: dayjs(d.update_time).format('YYYY-MM-DD HH:mm'),
   }))
 }
 
@@ -94,8 +95,8 @@ export function useInTransitData() {
   const { data: vehiclePieChart, pending: vehiclePieChartPending } = apiFetch('srvaud_laneexitdata_vehicle_ratio_select', mockVehiclePieChart, adaptPie('exvehicletype_str', 'dept_ratio_str')) // 车型占比
   const { data: trendLineChart, pending: trendLineChartPending } = apiFetch('srvaud_laneexitdata_cnt_date_select', mockTrendLineChart, adaptDateSeries('成果数量', 'cnt_date', 'ztjh_cnt')) // 成果数量本月趋势
   const { data: amountBarChart, pending: amountBarChartPending } = apiFetch('srvaud_laneexitdata_amount_date_select', mockAmountBarChart, adaptDateSeries('成果金额', 'cnt_date', 'diff_fee')) // 成果金额本月变化
-
-  const isLoading = computed(() =>
+  // === 全局 isLoading 汇总 ===
+  const isLoadingRaw = computed(() =>
     statsPending.value
     || devicesPending.value
     || leftPieChartPending.value
@@ -108,6 +109,21 @@ export function useInTransitData() {
     || amountBarChartPending.value,
   )
 
+  const isClientReady = ref(false)
+  if (import.meta.client) {
+    setTimeout(() => {
+      isClientReady.value = true
+    }, 600)
+  }
+
+  // 计算属性，合成 API pending 与首次渲染最少 600ms 的保护层，保证各模块首屏加载动效不割裂
+  const delayedIsLoading = computed(() => {
+    if (import.meta.client && !isClientReady.value) {
+      return true
+    }
+    return isLoadingRaw.value
+  })
+
   return {
     stats,
     devices,
@@ -119,7 +135,7 @@ export function useInTransitData() {
     vehiclePieChart,
     trendLineChart,
     amountBarChart,
-    isLoading,
+    isLoading: delayedIsLoading,
     /* 导出单点 pending 以供 ECharts 使用 */
     pendings: {
       leftPieChart: leftPieChartPending,

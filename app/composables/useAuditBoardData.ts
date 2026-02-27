@@ -41,15 +41,30 @@ export function useAuditBoardData() {
   const { data: trendLineChart, pending: trendLineChartPending } = apiFetch('srvaud_board_daily_recovery_trend_select', mockTrendLineChart)
   const { data: groupBarChart, pending: groupBarChartPending } = apiFetch('srvaud_board_monthly_workorder_stats_select', mockGroupBarChart)
 
-  const isLoading = computed(() =>
-    statsPending.value ||
-    barChartPending.value ||
-    lineChartPending.value ||
-    pieChartPending.value ||
-    ringChartPending.value ||
-    trendLineChartPending.value ||
-    groupBarChartPending.value,
+  const isLoadingRaw = computed(() =>
+    statsPending.value
+    || barChartPending.value
+    || lineChartPending.value
+    || pieChartPending.value
+    || ringChartPending.value
+    || trendLineChartPending.value
+    || groupBarChartPending.value,
   )
+
+  const isClientReady = ref(false)
+  if (import.meta.client) {
+    setTimeout(() => {
+      isClientReady.value = true
+    }, 600)
+  }
+
+  // 计算属性，合成 API pending 与首次渲染最少 600ms 的保护层，保证各模块首屏加载动效不割裂
+  const delayedIsLoading = computed(() => {
+    if (import.meta.client && !isClientReady.value) {
+      return true
+    }
+    return isLoadingRaw.value
+  })
 
   return {
     stats,
@@ -59,7 +74,7 @@ export function useAuditBoardData() {
     ringChart,
     trendLineChart,
     groupBarChart,
-    isLoading,
+    isLoading: delayedIsLoading,
     /* 导出具体图表的 pending 以供图表单点 loading 使用 */
     pendings: {
       barChart: barChartPending,

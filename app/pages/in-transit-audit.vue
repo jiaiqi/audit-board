@@ -56,7 +56,7 @@ function buildRosePie(c: InTransitPieChartData | null): EChartsOption {
     legend: { show: false },
     series: [{
       type: 'pie',
-      roseType: 'area',
+      roseType: 'radius',
       radius: ['20%', '70%'],
       center: ['50%', '50%'],
       avoidLabelOverlap: true,
@@ -199,8 +199,9 @@ useEChartsManager([
         </div>
 
         <!-- 中列 -->
-        <div class="center-col">
+        <div class="center-col relative">
           <!-- 统计卡片 -->
+
           <div class="stat-grid relative">
             <div v-if="isLoading" class="panel-loading-overlay" style="border-radius: 8px;">
               <div class="loading-spinner" />
@@ -209,7 +210,11 @@ useEChartsManager([
               <div class="stat-inner">
                 <div class="stat-text">
                   <div class="stat-value">
-                    {{ card.value }}
+                    <BoardCountUp
+                      :value="card?.value"
+                      :use-grouping="true"
+                      :decimals="String(card?.value || '').includes('.') ? (String(card?.value || '').split('.')[1]?.length ?? 0) : 0"
+                    />
                   </div>
                   <div class="stat-label">
                     {{ card.label }}
@@ -237,11 +242,11 @@ useEChartsManager([
               :step-duration="0.5"
               :columns="[
                 { title: 'IP', key: 'ip', width: '15%' },
-                { title: '系统CPU负载百分比', key: 'cpu', width: '16%' },
+                { title: '系统CPU负载百分比', key: 'cpu', width: '18%' },
                 { title: '总物理内存大小', key: 'memory', width: '15%' },
-                { title: '磁盘可用空间', key: 'disk', width: '15%' },
-                { title: '物理内存使用率百分比', key: 'usage', width: '20%' },
-                { title: '更新时间', key: 'time', width: '19%' },
+                { title: '磁盘可用空间', key: 'disk', width: '12%' },
+                { title: '物理内存使用率百分比', key: 'usage', width: '23%' },
+                { title: '更新时间', key: 'time', width: '16%' },
               ]"
             >
               <template #usage="{ row }">
@@ -334,7 +339,7 @@ useEChartsManager([
 .main-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1.52fr 1fr;
+  grid-template-columns: 1fr 1.8fr 1fr;
   gap: 8px;
   min-height: 0;
 }
@@ -569,6 +574,35 @@ useEChartsManager([
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* ══════════════ Loading 遮罩层 ══════════════ */
+.panel-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(11, 17, 26, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  border-radius: inherit;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0, 240, 255, 0.2);
+  border-top-color: #00f0ff;
+  border-radius: 50%;
+  animation: spinner-rotate 1s linear infinite;
+}
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
