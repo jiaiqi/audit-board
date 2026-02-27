@@ -45,7 +45,7 @@ function buildBar(c: BarChartData | null): EChartsOption {
     tooltip: { trigger: 'axis', ...darkTooltip },
     grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
     xAxis: { type: 'category', data: c?.categories ?? [], axisLine: axisStyle.cyanLine, axisLabel: { ...axisStyle.whiteLabel, fontSize: 10, interval: 0, rotate: 30 }, axisTick: axisStyle.noTick },
-    yAxis: { type: 'value', axisLine: axisStyle.hiddenLine, axisLabel: { ...axisStyle.whiteLabel, formatter: (v: number) => `${v}万元` }, splitLine: axisStyle.cyanSplit },
+    yAxis: { type: 'value', axisLine: axisStyle.hiddenLine, axisLabel: { ...axisStyle.whiteLabel, formatter: (v: number) => `${v}` }, splitLine: axisStyle.cyanSplit },
     series: [{
       name: '追缴金额',
       type: 'bar',
@@ -74,7 +74,7 @@ function buildLine(c: LineChartData | null): EChartsOption {
     tooltip: { trigger: 'axis', ...orangeTooltip },
     grid: { left: '3%', right: '4%', bottom: '3%', top: '20%', containLabel: true },
     xAxis: { type: 'category', boundaryGap: false, data: c?.categories ?? [], axisLine: axisStyle.orangeLine, axisLabel: axisStyle.whiteLabel, axisTick: axisStyle.noTick },
-    yAxis: { type: 'value', name: '金额(万元)', nameTextStyle: { color: '#fff' }, axisLine: axisStyle.hiddenLine, axisLabel: axisStyle.whiteLabel, splitLine: axisStyle.orangeSplit },
+    yAxis: { type: 'value', name: '金额', nameTextStyle: { color: '#fff' }, axisLine: axisStyle.hiddenLine, axisLabel: axisStyle.whiteLabel, splitLine: axisStyle.orangeSplit },
     series: [{
       name: '追缴金额',
       type: 'line',
