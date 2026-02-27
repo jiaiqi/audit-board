@@ -41,6 +41,12 @@ export default defineNuxtConfig({
     baseURL: '/board',
   },
 
+  // router: {
+  //   options: {
+  //     hashMode: true, // 开启hash模式
+  //   },
+  // },
+
   colorMode: {
     classSuffix: '',
   },
