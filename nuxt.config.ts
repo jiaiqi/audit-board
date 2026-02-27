@@ -53,8 +53,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // 设为 true 使用本地 mock 接口，设为 false 切换到真实后端
-      // 也可通过环境变量 NUXT_PUBLIC_USE_MOCK=true 覆盖
-      useMock: false,
+      // 当使用 Cloudflare (CF_PAGES=1) 部署时，默认强制开启它，以免服务端连不通后端内网抛 522
+      useMock: process.env.CF_PAGES === '1',
       // 真实接口地址前缀（useMock=false 时生效）
       // 运行时可通过 public/config.js 中的 window.__APP_CONFIG__.apiBase 覆盖
       apiBase: 'http://30.61.1.21:180',
