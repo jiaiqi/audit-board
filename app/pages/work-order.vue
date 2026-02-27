@@ -263,7 +263,7 @@ useEChartsManager([
               </div>
               <div class="ring-row">
                 <div class="ring-row__left">
-                  <img :src="`${useRuntimeConfig().app.baseURL}assets/icons/05.png`" alt="">
+                  <img :src="`${useRuntimeConfig().app.baseURL}/assets/icons/05.png`" alt="">
                   <div>
                     <div class="ring-row__label">
                       {{ ringCenterTitle }}

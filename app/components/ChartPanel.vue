@@ -22,7 +22,7 @@ defineExpose({ chartEl })
 <template>
   <div class="chart-panel" :class="{ 'chart-panel--bordered': bordered }">
     <div class="chart-panel__hd" :class="{ 'chart-panel__hd--bg': titleBg }">
-      <img class="chart-panel__icon" :src="`${useRuntimeConfig().app.baseURL}assets/icons/arrow-icon.png" alt="">
+      <img class="chart-panel__icon" :src="`${useRuntimeConfig().app.baseURL}/assets/icons/arrow-icon.png`" alt="">
       <span class="chart-panel__title">{{ title }}</span>
     </div>
     <div ref="chartEl" class="chart-panel__body" />
